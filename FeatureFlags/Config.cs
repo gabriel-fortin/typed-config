@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace org.g14.FeatureFlags;
 
-public class FeatureEntry(IConfigurationSection configSection)
+internal class Config(IConfigurationSection configSection) : IConfig
 {
     private const string IS_ENABLED = "IsEnabled";
 

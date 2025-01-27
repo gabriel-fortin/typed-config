@@ -2,11 +2,11 @@ using org.g14.FeatureFlags;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-builder.Services.AddSingleton<FeatureManager>();
+builder.Services.AddSingleton<IFeatureManager, FeatureManager>();
 
 var host = builder.Build();
 
-FeatureManager features = host.Services.GetService<FeatureManager>()
+IFeatureManager features = host.Services.GetService<IFeatureManager>()
     ?? throw new InvalidOperationException("FeatureManager could not be retrieved from DI container");
 
 Console.WriteLine("Hello, World!");
