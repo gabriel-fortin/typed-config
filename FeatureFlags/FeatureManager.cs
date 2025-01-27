@@ -1,17 +1,20 @@
+using Microsoft.Extensions.Configuration;
+
 namespace org.g14.FeatureFlags;
 
-public class FeatureManager
+public class FeatureManager(IConfiguration configuration)
 {
-    public FeatureEntry this[string s]
-    {
-        get => throw new NotImplementedException();
-    }
-}
+    private readonly IConfigurationSection _featureRoot =
+        configuration.GetRequiredSection("FeatureFlags");
 
-public class FeatureEntry()
-{
-    public bool IsEnabled
+    public FeatureEntry this[string key]
     {
-        get => throw new NotImplementedException();
+        get
+        {
+            string[] entryPathItems = key.Split('.');
+            string configPath = string.Join(ConfigurationPath.KeyDelimiter, entryPathItems);
+            IConfigurationSection configSection = _featureRoot.GetRequiredSection(configPath);
+            return new FeatureEntry(configSection);
+        }
     }
 }

@@ -6,21 +6,23 @@ builder.Services.AddSingleton<FeatureManager>();
 
 var host = builder.Build();
 
-FeatureManager feature = host.Services.GetService<FeatureManager>()
+FeatureManager features = host.Services.GetService<FeatureManager>()
     ?? throw new InvalidOperationException("FeatureManager could not be retrieved from DI container");
 
 Console.WriteLine("Hello, World!");
 
-if (feature["TwoWayMessaging"].IsEnabled)
+if (features["TwoWayMessaging"].IsEnabled)
 {
     Console.WriteLine("Two way messaging");
 }
 
-if (feature["IncomeSupport"].IsEnabled)
+if (features["IncomeSupport"].IsEnabled)
 {
     Console.WriteLine("Income Support");
+    int n = features["IncomeSupport"].Get<int>("MagicNumber");
+    Console.WriteLine($"     -- magic number is {n}");
 
-    if (feature["IncomeSupport.Page8"].IsEnabled)
+    if (features["IncomeSupport.Page8"].IsEnabled)
     {
         Console.WriteLine("Page 8 of Income Support");
     }
