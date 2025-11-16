@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Web;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using org.g14.FeatureFlags.Generation.JsonStructure;
@@ -11,14 +13,18 @@ public class FeatureFlagTypesCreator(
     string baseNamespace,
     SourceProductionContext ctx)
 {
+    private const string ROOT_CLASS_NAME = "FlagsRoot";
+
     /// <summary>
     /// Reads the structure of feature flags from appsettings and generates types representing them
     /// </summary>
     public void ScanAppsettingsAndCreateSourceFiles()
     {
-        if (!IsFileCountValid(appsettingsFiles))
+        GenerateUndefinedType();
+        
+        if (!IsFileCountValid(appsettingsFiles, out Diagnostic? diagnostic))
         {
-            // TODO: generate a file with a COMPILATION_ERROR property having a value of "the implementation could not be generated"
+            GenerateRootClassRepresentingError(diagnostic.GetMessage());
             return;
         }
 
@@ -28,30 +34,6 @@ public class FeatureFlagTypesCreator(
         GenerateFeatureFlagClass(jsonObject, baseNamespace);
         // TODO: generate array items and nested object items
 
-        GenerateUndefinedType();
-    }
-
-    private bool IsFileCountValid(ImmutableArray<AdditionalText> files)
-    {
-        if (files.Length == 0)
-        {
-            ctx.ReportDiagnostic(Diagnostic.Create(
-                descriptor: DiagnosticDescriptors.NotEnoughFiles,
-                location: null,
-                messageArgs: []));
-            return false;
-        }
-
-        if (files.Length != 1)
-        {
-            ctx.ReportDiagnostic(Diagnostic.Create(
-                descriptor: DiagnosticDescriptors.TooManyFiles,
-                location: null,
-                messageArgs: []));
-            return false;
-        }
-
-        return true;
     }
 
     private JsonType? ReadAndParseAppsettings()
@@ -99,13 +81,32 @@ public class FeatureFlagTypesCreator(
         // TODO: order of members (once all are handled): primitives, arrays, nested objects
         // TODO: PERF: use a string builder to build the class's code
         ctx.AddSource(
-            hintName: "FlagsRoot.generated.cs",
+            hintName: $"{ROOT_CLASS_NAME}.generated.cs",
             source: $$"""
                       namespace {{@namespace}};
 
-                      public class FlagsRoot
+                      public class {{ROOT_CLASS_NAME}}
                       {
                           {{string.Join("\n    ", propsLines)}}
+                      }
+                      """);
+    }
+
+    private void GenerateRootClassRepresentingError(string errorMessage)
+    {
+        ctx.CancellationToken.ThrowIfCancellationRequested();
+        
+        ctx.AddSource(
+            hintName: $"{ROOT_CLASS_NAME}.generated.cs",
+            source: $$"""
+                      namespace {{baseNamespace}};
+
+                      public class {{ROOT_CLASS_NAME}}
+                      {
+                          /// <summary>
+                          /// {{HttpUtility.HtmlEncode(errorMessage)}}
+                          /// </summary>
+                          public string COMPILATION_ERROR = "File generation was impossible";
                       }
                       """);
     }
@@ -126,5 +127,30 @@ public class FeatureFlagTypesCreator(
                       {
                       }
                       """);
+    }
+
+    private static bool IsFileCountValid(ImmutableArray<AdditionalText> files,
+        [NotNullWhen(false)] out Diagnostic? diagnostic)
+    {
+        if (files.Length == 0)
+        {
+            diagnostic = Diagnostic.Create(
+                descriptor: DiagnosticDescriptors.NotEnoughFiles,
+                location: null,
+                messageArgs: []);
+            return false;
+        }
+
+        if (files.Length != 1)
+        {
+            diagnostic = Diagnostic.Create(
+                descriptor: DiagnosticDescriptors.TooManyFiles,
+                location: null,
+                messageArgs: []);
+            return false;
+        }
+
+        diagnostic = null;
+        return true;
     }
 }
