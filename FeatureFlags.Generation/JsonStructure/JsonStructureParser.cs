@@ -2,7 +2,7 @@
 
 namespace org.g14.FeatureFlags.Generation.JsonStructure;
 
-public static class JsonStrucureParser
+public static class JsonStructureParser
 {
     public static JsonType Parse(JsonElement element)
     {

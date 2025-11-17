@@ -60,7 +60,7 @@ public class FeatureFlagTypesCreator(
         using JsonDocument appsettingsDoc = JsonDocument.Parse(appsettingsSourceText.ToString());
         ctx.CancellationToken.ThrowIfCancellationRequested();
         JsonElement featureFlagsSection = appsettingsDoc.RootElement.GetProperty("FeatureFlags"u8);
-        parsedStructure = JsonStrucureParser.Parse(featureFlagsSection);
+        parsedStructure = JsonStructureParser.Parse(featureFlagsSection);
         diagnostic = null;
         return true;
     }
