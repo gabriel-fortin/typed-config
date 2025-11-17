@@ -14,6 +14,7 @@ public class FeatureFlagTypesCreator(
     SourceProductionContext ctx)
 {
     private const string ROOT_CLASS_NAME = "FlagsRoot";
+    private const string UNDEFINED_CLASS_NAME = "Undefined";
 
     /// <summary>
     /// Reads the structure of feature flags from appsettings and generates types representing them
@@ -79,14 +80,23 @@ public class FeatureFlagTypesCreator(
             .Select(pair =>
             {
                 string name = pair.Key;
-                (string type, string comment) = pair.Value.Kind switch
+                string type = pair.Value.Kind switch
                 {
-                    JsonValueKind.String => ("string", string.Empty),
-                    JsonValueKind.Number => ("int", string.Empty),
-                    JsonValueKind.False or JsonValueKind.True => ("bool", string.Empty),
-                    _ => ("Undefined", $" // the unidentified JsonValueKind value was: {pair.Value.Kind}")
+                    JsonValueKind.String => "string",
+                    JsonValueKind.Number => "int",
+                    JsonValueKind.False => "bool",
+                    JsonValueKind.True => "bool",
+                    _ => UNDEFINED_CLASS_NAME
                 };
-                return $"public required {type} {name} {{ get; set; }}{comment}";
+
+                string result = $"public required {type} {name} {{ get; set; }}";
+
+                if (type == UNDEFINED_CLASS_NAME)
+                {
+                    result += $" // the unidentified JsonValueKind value was: {pair.Value.Kind}";
+                }
+
+                return result;
             });
 
 
@@ -128,14 +138,14 @@ public class FeatureFlagTypesCreator(
         ctx.CancellationToken.ThrowIfCancellationRequested();
 
         ctx.AddSource(
-            hintName: "Undefined.generated.cs",
+            hintName: $"{UNDEFINED_CLASS_NAME}.generated.cs",
             source: $$"""
                       namespace {{baseNamespace}};
 
                       /// <summary>
                       /// The type of the item in appsettings could not be identified
                       /// </summary>
-                      public class Undefined
+                      public class {{UNDEFINED_CLASS_NAME}}
                       {
                       }
                       """);
