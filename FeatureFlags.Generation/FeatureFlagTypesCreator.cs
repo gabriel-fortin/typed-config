@@ -21,35 +21,47 @@ public class FeatureFlagTypesCreator(
     public void ScanAppsettingsAndCreateSourceFiles()
     {
         GenerateUndefinedType();
-        
-        if (!IsFileCountValid(appsettingsFiles, out Diagnostic? diagnostic))
+
+        if (!IsFileCountValid(appsettingsFiles, out Diagnostic? diagnostic1))
         {
-            GenerateRootClassRepresentingError(diagnostic.GetMessage());
+            GenerateRootClassRepresentingError(diagnostic1.GetMessage());
             return;
         }
 
-        JsonType? parsedStructure = ReadAndParseAppsettings();
+        if (!TryReadAndParseAppsettings(out var parsedStructure, out var diagnostic2))
+        {
+            ctx.ReportDiagnostic(diagnostic2);
+            GenerateRootClassRepresentingError(diagnostic2.GetMessage());
+            return;
+        }
+
         if (parsedStructure is not JsonObjectType jsonObject) return;
 
         GenerateFeatureFlagClass(jsonObject, baseNamespace);
         // TODO: generate array items and nested object items
-
     }
 
-    private JsonType? ReadAndParseAppsettings()
+    private bool TryReadAndParseAppsettings([NotNullWhen(true)] out JsonType? parsedStructure,
+        [NotNullWhen(false)] out Diagnostic? diagnostic)
     {
-        SourceText? appsettingsSourceText = appsettingsFiles.First().GetText();
+        AdditionalText file = appsettingsFiles.First();
+        SourceText? appsettingsSourceText = file.GetText(ctx.CancellationToken);
         if (appsettingsSourceText == null)
         {
-            // TODO: diagnostic: cannot read file
-            return null;
+            parsedStructure = null;
+            diagnostic = Diagnostic.Create(
+                descriptor: DiagnosticDescriptors.CannotReadFile,
+                location: null,
+                messageArgs: [file.Path]);
+            return false;
         }
 
         using JsonDocument appsettingsDoc = JsonDocument.Parse(appsettingsSourceText.ToString());
         ctx.CancellationToken.ThrowIfCancellationRequested();
-        JsonElement featureFlagsSection = appsettingsDoc.RootElement.GetProperty("FeatureFlags");
-        JsonType jsonStructure = JsonStrucureParser.Parse(featureFlagsSection);
-        return jsonStructure;
+        JsonElement featureFlagsSection = appsettingsDoc.RootElement.GetProperty("FeatureFlags"u8);
+        parsedStructure = JsonStrucureParser.Parse(featureFlagsSection);
+        diagnostic = null;
+        return true;
     }
 
     private void GenerateFeatureFlagClass(JsonObjectType jsonStructure, string @namespace)
@@ -95,7 +107,7 @@ public class FeatureFlagTypesCreator(
     private void GenerateRootClassRepresentingError(string errorMessage)
     {
         ctx.CancellationToken.ThrowIfCancellationRequested();
-        
+
         ctx.AddSource(
             hintName: $"{ROOT_CLASS_NAME}.generated.cs",
             source: $$"""
@@ -106,7 +118,7 @@ public class FeatureFlagTypesCreator(
                           /// <summary>
                           /// {{HttpUtility.HtmlEncode(errorMessage)}}
                           /// </summary>
-                          public string COMPILATION_ERROR = "File generation was impossible";
+                          public string COMPILATION_ERROR = "File could not be generated. See the doc comment of this property for details";
                       }
                       """);
     }

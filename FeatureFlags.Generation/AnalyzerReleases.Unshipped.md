@@ -7,3 +7,4 @@ Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
  FLAGS_001 | Input files | Error    | 
  FLAGS_002 | Input files | Error    | 
+ FLAGS_003 | Input files | Error | 

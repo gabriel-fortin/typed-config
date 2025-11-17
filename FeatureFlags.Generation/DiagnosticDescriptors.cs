@@ -23,4 +23,12 @@ public static class DiagnosticDescriptors
         category: INPUT_FILES_CATEGORY,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor CannotReadFile = new(
+        id: "FLAGS_003",
+        title: "File cannot be read",
+        messageFormat: "Feature flags: cannot read appsettings file: '{FileName}'",
+        category: INPUT_FILES_CATEGORY,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
