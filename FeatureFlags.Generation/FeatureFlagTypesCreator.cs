@@ -25,6 +25,7 @@ public class FeatureFlagTypesCreator(
 
         if (!IsFileCountValid(appsettingsFiles, out Diagnostic? diagnostic1))
         {
+            ctx.ReportDiagnostic(diagnostic1);
             GenerateRootClassRepresentingError(diagnostic1.GetMessage());
             return;
         }
@@ -38,8 +39,7 @@ public class FeatureFlagTypesCreator(
 
         if (parsedStructure is not JsonObjectType jsonObject) return;
 
-        GenerateFeatureFlagClass(jsonObject, baseNamespace);
-        // TODO: generate array items and nested object items
+        GenerateClassForObject(jsonObject, baseNamespace, ROOT_CLASS_NAME);
     }
 
     private bool TryReadAndParseAppsettings([NotNullWhen(true)] out JsonType? parsedStructure,
@@ -65,53 +65,90 @@ public class FeatureFlagTypesCreator(
         return true;
     }
 
-    private void GenerateFeatureFlagClass(JsonObjectType jsonStructure, string @namespace)
+    private (string requiredNamespace, string typeName) GenerateClassForObject(
+        JsonObjectType jsonStructure, string @namespace, string nameInParent)
     {
         ctx.CancellationToken.ThrowIfCancellationRequested();
 
-        // TODO: add param for the name of the class
-
-        IEnumerable<KeyValuePair<string, JsonPrimitiveType>> props =
+        // generate nested types (that will allow properties in this class to have appropriate types)
+        (string? requiredNamespace, (string propType, string propName))[] propsAndTheirTypes =
             jsonStructure.Properties
-                .Where(x => x.Value is JsonPrimitiveType)
-                .Select(x => new KeyValuePair<string, JsonPrimitiveType>(x.Key, (JsonPrimitiveType)x.Value));
+                .Select((KeyValuePair<string, JsonType> kvp) =>
+                {
+                    (string propName, JsonType propDetails) = kvp;
+                    (string? requiredNamespace, string type) = propDetails switch
+                    {
+                        JsonPrimitiveType primitive => GetTypeOfPrimitive(primitive),
+                        JsonArrayType arr => GenerateClassForArray(arr, $"{@namespace}.{propName}", propName),
+                        JsonObjectType obj => GenerateClassForObject(obj, $"{@namespace}.{propName}", propName),
+                        _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+                    };
+                    return (requiredNamespace, (type, propName));
+                })
+                .ToArray();
 
-        IEnumerable<string> propsLines = props
-            .Select(pair =>
+        IEnumerable<string> propsLines = propsAndTheirTypes
+            .Select(x =>
             {
-                string name = pair.Key;
-                string type = pair.Value.Kind switch
-                {
-                    JsonValueKind.String => "string",
-                    JsonValueKind.Number => "int",
-                    JsonValueKind.False => "bool",
-                    JsonValueKind.True => "bool",
-                    _ => UNDEFINED_CLASS_NAME
-                };
-
-                string result = $"public required {type} {name} {{ get; set; }}";
-
-                if (type == UNDEFINED_CLASS_NAME)
-                {
-                    result += $" // the unidentified JsonValueKind value was: {pair.Value.Kind}";
-                }
-
-                return result;
+                string propType = x.Item2.propType;
+                string propName = x.Item2.propName;
+                return $"public required {propType} {propName} {{ get; set; }}";
             });
 
+        IEnumerable<string> usingStatements = propsAndTheirTypes
+            .Select(x => x.requiredNamespace)
+            .Distinct()
+            .Where(ns => ns != null)!
+            .Select(ns => $"using {ns};");
 
-        // TODO: order of members (once all are handled): primitives, arrays, nested objects
+        string className = $"{nameInParent}Type";
+
+        // TODO: order of members: primitives, arrays, nested objects
         // TODO: PERF: use a string builder to build the class's code
         ctx.AddSource(
-            hintName: $"{ROOT_CLASS_NAME}.generated.cs",
+            hintName: $"{className}.generated.cs",
             source: $$"""
+                      {{string.Join("\n", usingStatements)}}
+
                       namespace {{@namespace}};
 
-                      public class {{ROOT_CLASS_NAME}}
+                      public class {{className}}
                       {
                           {{string.Join("\n    ", propsLines)}}
                       }
                       """);
+
+        return (requiredNamespace: @namespace, typeName: className);
+    }
+
+    private (string? requiredNamespace, string typeName) GenerateClassForArray(
+        JsonArrayType jsonStructure, string @namespace, string nameInParent)
+    {
+        string nameForArrayItem = $"{nameInParent}Item";
+
+        (string? requiredNamespace, string typeName) result = jsonStructure.ItemType switch
+        {
+            JsonPrimitiveType primitive => GetTypeOfPrimitive(primitive),
+            JsonArrayType array => GenerateClassForArray(array, @namespace, nameForArrayItem),
+            JsonObjectType obj => GenerateClassForObject(obj, @namespace, nameForArrayItem),
+            _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+        };
+
+        result.typeName += "[]";
+        return result;
+    }
+
+    private (string?, string) GetTypeOfPrimitive(JsonPrimitiveType jsonStructure)
+    {
+        return jsonStructure switch
+        {
+            { Kind: JsonValueKind.String } => (null, "string"),
+            { Kind: JsonValueKind.Number } => (null, "int"),
+            { Kind: JsonValueKind.True } => (null, "bool"),
+            { Kind: JsonValueKind.False } => (null, "bool"),
+            { Kind: JsonValueKind.Null } => (null, "float"),
+            _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+        };
     }
 
     private void GenerateRootClassRepresentingError(string errorMessage)
