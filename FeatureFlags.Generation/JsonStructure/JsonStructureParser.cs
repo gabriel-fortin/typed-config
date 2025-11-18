@@ -31,26 +31,14 @@ public static class JsonStructureParser
         var arr = new JsonArrayType();
 
         // If empty, treat as "array of any"
-        if (!element.EnumerateArray().Any())
+        if (element.GetArrayLength() == 0)
         {
             arr.ItemType = new JsonPrimitiveType(JsonValueKind.Undefined);
             return arr;
         }
 
-
-        JsonType candidateType = Parse(element.EnumerateArray().First());
-        if (element.EnumerateArray().All(x => Parse(x) == candidateType))
-        {
-            arr.ItemType = candidateType;
-            return arr;
-        }
-        else
-        {
-            arr.ItemType = new JsonPrimitiveType(JsonValueKind.Undefined);
-            return arr;
-        }
-        // PERF: if checking every item is too expensive,
-        // we could refrain from looping over all items and just use candidateType immediately
-        // (i.e. assume other items are the same)
+        JsonType sampledType = Parse(element.EnumerateArray().First());
+        arr.ItemType = sampledType;
+        return arr;
     }
 }
