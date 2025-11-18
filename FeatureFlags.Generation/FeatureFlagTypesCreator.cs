@@ -8,6 +8,9 @@ using org.g14.FeatureFlags.Generation.JsonStructure;
 
 namespace org.g14.FeatureFlags.Generation;
 
+// helper type
+public record PropDetails(string? RequiredNamespace, string PropType, string PropName);
+
 public class FeatureFlagTypesCreator(
     ImmutableArray<AdditionalText> appsettingsFiles,
     string baseNamespace,
@@ -77,29 +80,32 @@ public class FeatureFlagTypesCreator(
         ctx.CancellationToken.ThrowIfCancellationRequested();
 
         // generate nested types (required to generate properties for this class)
-        (string? requiredNamespace, string propType, string propName)[] propsAndTheirTypes =
+        PropDetails[] propsAndTheirTypes =
             jsonStructure.Properties
-                .Select((KeyValuePair<string, JsonType> kvp) =>
-                {
-                    (string propName, JsonType propDetails) = kvp;
-
-                    (string? requiredNamespace, string type) = propDetails switch
-                    {
-                        JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
-                        JsonArrayType arr =>
-                            GetTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", propName),
-                        JsonObjectType obj =>
-                            GenerateAndGetTypeOfObjectJsonItem(obj, $"{@namespace}.{propName}", propName),
-                        _ => (baseNamespace, UNDEFINED_CLASS_NAME),
-                    };
-
-                    return (requiredNamespace, type, propName);
-                })
+                .Select(GetTypeOfObjectProperty)
                 .ToArray();
 
         var className = $"{nameInParent}Type";
         GenerateClassCodeForAppsettingsObject(@namespace, propsAndTheirTypes, className);
         return (requiredNamespace: @namespace, typeName: className);
+
+        // local helper function
+        PropDetails GetTypeOfObjectProperty(KeyValuePair<string, JsonType> kvp)
+        {
+            (string propName, JsonType propDetails) = kvp;
+
+            (string? requiredNamespace, string type) = propDetails switch
+            {
+                JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
+                JsonArrayType arr =>
+                    GetTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", propName),
+                JsonObjectType obj =>
+                    GenerateAndGetTypeOfObjectJsonItem(obj, $"{@namespace}.{propName}", propName),
+                _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+            };
+
+            return new PropDetails(requiredNamespace, type, propName);
+        }
     }
 
     /// <summary>
@@ -139,16 +145,17 @@ public class FeatureFlagTypesCreator(
         };
     }
 
+    // TODO: instead of using ctx, return a CodeDetails object and let the caller call ctx
     private void GenerateClassCodeForAppsettingsObject(
         string @namespace,
-        (string? requiredNamespace, string propType, string propName)[] propsAndTheirTypes,
+        PropDetails[] propsAndTheirTypes,
         string className)
     {
         IEnumerable<string> propsLines = propsAndTheirTypes
-            .Select(x => $"public required {x.propType} {x.propName} {{ get; set; }}");
+            .Select(x => $"public required {x.PropType} {x.PropName} {{ get; set; }}");
 
         IEnumerable<string> usingStatements = propsAndTheirTypes
-            .Select(x => x.requiredNamespace)
+            .Select(x => x.RequiredNamespace)
             .Distinct()
             .Where(ns => ns != null)
             .Select(ns => $"using {ns};");
