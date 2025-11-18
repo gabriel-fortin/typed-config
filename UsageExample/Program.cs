@@ -1,6 +1,7 @@
 // using org.g14.FeatureFlags;
 
 using UsageExample.GeneratedFeatureFlags;
+using UsageExample.GeneratedFeatureFlags.TwoWayMessaging.RefreshIntervals;
 
 var builder = Host.CreateApplicationBuilder(args);
 

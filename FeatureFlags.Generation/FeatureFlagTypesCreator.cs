@@ -21,7 +21,7 @@ public class FeatureFlagTypesCreator(
     /// </summary>
     public void ScanAppsettingsAndCreateSourceFiles()
     {
-        GenerateUndefinedType();
+        GenerateTheUndefinedType();
 
         if (!IsFileCountValid(appsettingsFiles, out Diagnostic? diagnostic1))
         {
@@ -39,7 +39,9 @@ public class FeatureFlagTypesCreator(
 
         if (parsedStructure is not JsonObjectType jsonObject) return;
 
-        GenerateClassForObject(jsonObject, baseNamespace, ROOT_CLASS_NAME);
+        // the actual generation of classes matching appsettings items
+        var (ns, type) = GenerateAndGetTypeOfObjectJsonItem(jsonObject, baseNamespace, ROOT_CLASS_NAME);
+        // TODO: use the created type name to generate a service collection extensions method
     }
 
     private bool TryReadAndParseAppsettings([NotNullWhen(true)] out JsonType? parsedStructure,
@@ -65,46 +67,95 @@ public class FeatureFlagTypesCreator(
         return true;
     }
 
-    private (string requiredNamespace, string typeName) GenerateClassForObject(
+    /// <summary>
+    /// Computes the type for an appsettings item of the object kind.
+    /// Internally, causes code generation for that type.
+    /// </summary>
+    private (string requiredNamespace, string typeName) GenerateAndGetTypeOfObjectJsonItem(
         JsonObjectType jsonStructure, string @namespace, string nameInParent)
     {
         ctx.CancellationToken.ThrowIfCancellationRequested();
 
-        // generate nested types (that will allow properties in this class to have appropriate types)
-        (string? requiredNamespace, (string propType, string propName))[] propsAndTheirTypes =
+        // generate nested types (required to generate properties for this class)
+        (string? requiredNamespace, string propType, string propName)[] propsAndTheirTypes =
             jsonStructure.Properties
                 .Select((KeyValuePair<string, JsonType> kvp) =>
                 {
                     (string propName, JsonType propDetails) = kvp;
+
                     (string? requiredNamespace, string type) = propDetails switch
                     {
-                        JsonPrimitiveType primitive => GetTypeOfPrimitive(primitive),
-                        JsonArrayType arr => GenerateClassForArray(arr, $"{@namespace}.{propName}", propName),
-                        JsonObjectType obj => GenerateClassForObject(obj, $"{@namespace}.{propName}", propName),
+                        JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
+                        JsonArrayType arr =>
+                            GetTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", propName),
+                        JsonObjectType obj =>
+                            GenerateAndGetTypeOfObjectJsonItem(obj, $"{@namespace}.{propName}", propName),
                         _ => (baseNamespace, UNDEFINED_CLASS_NAME),
                     };
-                    return (requiredNamespace, (type, propName));
+
+                    return (requiredNamespace, type, propName);
                 })
                 .ToArray();
 
+        var className = $"{nameInParent}Type";
+        GenerateClassCodeForAppsettingsObject(@namespace, propsAndTheirTypes, className);
+        return (requiredNamespace: @namespace, typeName: className);
+    }
+
+    /// <summary>
+    /// Computes the type for an appsettings item of the array kind.
+    /// Possibly causes class code generation in downstream calls.
+    /// </summary>
+    private (string? requiredNamespace, string typeName) GetTypeOfArrayJsonItem(
+        JsonArrayType jsonStructure, string @namespace, string nameInParent)
+    {
+        string nameForArrayItem = $"{nameInParent}Item";
+
+        (string? requiredNamespace, string typeName) result = jsonStructure.ItemType switch
+        {
+            JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
+            JsonArrayType array => GetTypeOfArrayJsonItem(array, @namespace, nameForArrayItem),
+            JsonObjectType obj => GenerateAndGetTypeOfObjectJsonItem(obj, @namespace, nameForArrayItem),
+            _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+        };
+
+        result.typeName += "[]";
+        return result;
+    }
+
+    /// <summary>
+    /// Computes the type for an appsettings item of the primitive kind.
+    /// </summary>
+    private (string?, string) GetTypeOfPrimitiveJsonItem(JsonPrimitiveType jsonStructure)
+    {
+        return jsonStructure switch
+        {
+            { Kind: JsonValueKind.String } => (null, "string"),
+            { Kind: JsonValueKind.Number } => (null, "int"),
+            { Kind: JsonValueKind.True } => (null, "bool"),
+            { Kind: JsonValueKind.False } => (null, "bool"),
+            { Kind: JsonValueKind.Null } => (null, "float"),
+            _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+        };
+    }
+
+    private void GenerateClassCodeForAppsettingsObject(
+        string @namespace,
+        (string? requiredNamespace, string propType, string propName)[] propsAndTheirTypes,
+        string className)
+    {
         IEnumerable<string> propsLines = propsAndTheirTypes
-            .Select(x =>
-            {
-                string propType = x.Item2.propType;
-                string propName = x.Item2.propName;
-                return $"public required {propType} {propName} {{ get; set; }}";
-            });
+            .Select(x => $"public required {x.propType} {x.propName} {{ get; set; }}");
 
         IEnumerable<string> usingStatements = propsAndTheirTypes
             .Select(x => x.requiredNamespace)
             .Distinct()
-            .Where(ns => ns != null)!
+            .Where(ns => ns != null)
             .Select(ns => $"using {ns};");
-
-        string className = $"{nameInParent}Type";
 
         // TODO: order of members: primitives, arrays, nested objects
         // TODO: PERF: use a string builder to build the class's code
+
         ctx.AddSource(
             hintName: $"{className}.generated.cs",
             source: $$"""
@@ -117,38 +168,6 @@ public class FeatureFlagTypesCreator(
                           {{string.Join("\n    ", propsLines)}}
                       }
                       """);
-
-        return (requiredNamespace: @namespace, typeName: className);
-    }
-
-    private (string? requiredNamespace, string typeName) GenerateClassForArray(
-        JsonArrayType jsonStructure, string @namespace, string nameInParent)
-    {
-        string nameForArrayItem = $"{nameInParent}Item";
-
-        (string? requiredNamespace, string typeName) result = jsonStructure.ItemType switch
-        {
-            JsonPrimitiveType primitive => GetTypeOfPrimitive(primitive),
-            JsonArrayType array => GenerateClassForArray(array, @namespace, nameForArrayItem),
-            JsonObjectType obj => GenerateClassForObject(obj, @namespace, nameForArrayItem),
-            _ => (baseNamespace, UNDEFINED_CLASS_NAME),
-        };
-
-        result.typeName += "[]";
-        return result;
-    }
-
-    private (string?, string) GetTypeOfPrimitive(JsonPrimitiveType jsonStructure)
-    {
-        return jsonStructure switch
-        {
-            { Kind: JsonValueKind.String } => (null, "string"),
-            { Kind: JsonValueKind.Number } => (null, "int"),
-            { Kind: JsonValueKind.True } => (null, "bool"),
-            { Kind: JsonValueKind.False } => (null, "bool"),
-            { Kind: JsonValueKind.Null } => (null, "float"),
-            _ => (baseNamespace, UNDEFINED_CLASS_NAME),
-        };
     }
 
     private void GenerateRootClassRepresentingError(string errorMessage)
@@ -170,7 +189,7 @@ public class FeatureFlagTypesCreator(
                       """);
     }
 
-    private void GenerateUndefinedType()
+    private void GenerateTheUndefinedType()
     {
         ctx.CancellationToken.ThrowIfCancellationRequested();
 
