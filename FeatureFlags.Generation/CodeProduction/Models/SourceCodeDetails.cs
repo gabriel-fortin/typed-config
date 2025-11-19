@@ -7,7 +7,9 @@ namespace org.g14.FeatureFlags.Generation.CodeProduction.Models;
 /// </summary>
 /// <param name="FileName">the proposed file name</param>
 /// <param name="SourceCodeText">the source code text to put in the file</param>
-public record SourceCodeDetails(string FileName, string SourceCodeText)
+public readonly record struct SourceCodeDetails(
+    string FileName,
+    string SourceCodeText)
 {
     /// <summary>
     /// Adds this source code to the compilation process

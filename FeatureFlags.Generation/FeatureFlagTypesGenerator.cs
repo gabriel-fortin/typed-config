@@ -11,11 +11,10 @@ using org.g14.FeatureFlags.Generation.JsonParsing.Models;
 namespace org.g14.FeatureFlags.Generation;
 
 public class FeatureFlagTypesGenerator(
-    ImmutableArray<AdditionalText> appsettingsFiles,
     string baseNamespace,
     SourceProductionContext ctx)
 {
-    private const string ROOT_CLASS_NAME = "FlagsRoot";
+    private const string ROOT_CLASS_NAME = "FlagsRootType";
     private const string UNDEFINED_CLASS_NAME = "Undefined";
 
     private readonly SourceCodeCreator code = new(baseNamespace, ctx.CancellationToken);
@@ -24,7 +23,7 @@ public class FeatureFlagTypesGenerator(
     /// Reads the structure of feature flags from appsettings
     /// and generates classes to match that structure
     /// </summary>
-    public void ScanAppsettingsAndGenerateMatchingSourceFiles()
+    public void ScanAppsettingsAndGenerateMatchingSourceFiles(ImmutableArray<AdditionalText> appsettingsFiles)
     {
         // add 'unknown' type; used only when something goes wrong
         code.GetUnknownTypeClass(UNDEFINED_CLASS_NAME).WriteTo(ctx);
@@ -36,7 +35,8 @@ public class FeatureFlagTypesGenerator(
             return;
         }
 
-        if (!TryReadFeatureFlagsStructureFromAppsettings(out JsonType? parsedStructure, out Diagnostic? diagnostic2))
+        if (!TryReadFeatureFlagsStructureFromAppsettings(appsettingsFiles,
+                out JsonType? parsedStructure, out Diagnostic? diagnostic2))
         {
             ctx.ReportDiagnostic(diagnostic2);
             code.GetErrorIndicatingClass(diagnostic2.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
@@ -51,6 +51,7 @@ public class FeatureFlagTypesGenerator(
     }
 
     private bool TryReadFeatureFlagsStructureFromAppsettings(
+        ImmutableArray<AdditionalText> appsettingsFiles,
         [NotNullWhen(true)] out JsonType? parsedStructure,
         [NotNullWhen(false)] out Diagnostic? diagnostic)
     {
@@ -80,7 +81,7 @@ public class FeatureFlagTypesGenerator(
     /// Internally, causes code generation for that type.
     /// </summary>
     private (string requiredNamespace, string typeName) GenerateAndGetTypeOfObjectJsonItem(
-        JsonObjectType jsonStructure, string @namespace, string nameInParent)
+        JsonObjectType jsonStructure, string @namespace, string className)
     {
         ctx.CancellationToken.ThrowIfCancellationRequested();
 
@@ -90,7 +91,6 @@ public class FeatureFlagTypesGenerator(
                 .Select(GetTypeOfObjectProperty)
                 .ToArray();
 
-        var className = $"{nameInParent}Type";
         code.GetAppsettingsObjectClass(@namespace, propsAndTheirTypes, className).WriteTo(ctx);
 
         return (requiredNamespace: @namespace, typeName: className);
@@ -104,9 +104,9 @@ public class FeatureFlagTypesGenerator(
             {
                 JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
                 JsonArrayType arr =>
-                    GetTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", propName),
+                    GetTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", $"{propName}ItemType"),
                 JsonObjectType obj =>
-                    GenerateAndGetTypeOfObjectJsonItem(obj, $"{@namespace}.{propName}", propName),
+                    GenerateAndGetTypeOfObjectJsonItem(obj, $"{@namespace}.{propName}", $"{propName}Type"),
                 _ => (baseNamespace, UNDEFINED_CLASS_NAME),
             };
 
@@ -119,15 +119,13 @@ public class FeatureFlagTypesGenerator(
     /// Possibly causes class code generation in downstream calls.
     /// </summary>
     private (string? requiredNamespace, string typeName) GetTypeOfArrayJsonItem(
-        JsonArrayType jsonStructure, string @namespace, string nameInParent)
+        JsonArrayType jsonStructure, string @namespace, string className)
     {
-        var nameForArrayItem = $"{nameInParent}Item";
-
         (string? requiredNamespace, string typeName) result = jsonStructure.ItemType switch
         {
             JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
-            JsonArrayType array => GetTypeOfArrayJsonItem(array, @namespace, nameForArrayItem),
-            JsonObjectType obj => GenerateAndGetTypeOfObjectJsonItem(obj, @namespace, nameForArrayItem),
+            JsonArrayType array => GetTypeOfArrayJsonItem(array, @namespace, className),
+            JsonObjectType obj => GenerateAndGetTypeOfObjectJsonItem(obj, @namespace, className),
             _ => (baseNamespace, UNDEFINED_CLASS_NAME),
         };
 

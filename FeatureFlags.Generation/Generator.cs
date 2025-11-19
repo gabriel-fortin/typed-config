@@ -28,8 +28,8 @@ public class Generator : IIncrementalGenerator
                 string baseNamespace = input.Right + ".GeneratedFeatureFlags";
 
                 // the core logic is hidden in here
-                var typesCreator = new FeatureFlagTypesGenerator(files, baseNamespace, sourceProductionContext);
-                typesCreator.ScanAppsettingsAndGenerateMatchingSourceFiles();
+                var generator = new FeatureFlagTypesGenerator(baseNamespace, sourceProductionContext);
+                generator.ScanAppsettingsAndGenerateMatchingSourceFiles(files);
             });
 
         // TODO: generate service collection extension method using RegisterPostInitializationOutput

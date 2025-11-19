@@ -5,7 +5,7 @@ using org.g14.FeatureFlags.Generation.CodeProduction.Models;
 namespace org.g14.FeatureFlags.Generation.CodeProduction;
 
 /// <summary>
-/// Creates contents of source code files.
+/// Creates text contents of source code files.
 /// </summary>
 public class SourceCodeCreator(
     string defaultNamespace,
