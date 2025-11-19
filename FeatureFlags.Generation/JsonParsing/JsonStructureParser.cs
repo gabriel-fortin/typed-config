@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
+using org.g14.FeatureFlags.Generation.JsonParsing.Models;
 
-namespace org.g14.FeatureFlags.Generation.JsonStructure;
+namespace org.g14.FeatureFlags.Generation.JsonParsing;
 
 public static class JsonStructureParser
 {

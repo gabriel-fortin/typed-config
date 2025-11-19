@@ -1,17 +1,16 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using System.Web;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using org.g14.FeatureFlags.Generation.JsonStructure;
+using org.g14.FeatureFlags.Generation.CodeProduction;
+using org.g14.FeatureFlags.Generation.CodeProduction.Models;
+using org.g14.FeatureFlags.Generation.JsonParsing;
+using org.g14.FeatureFlags.Generation.JsonParsing.Models;
 
 namespace org.g14.FeatureFlags.Generation;
 
-// helper type
-public record PropDetails(string? RequiredNamespace, string PropType, string PropName);
-
-public class FeatureFlagTypesCreator(
+public class FeatureFlagTypesGenerator(
     ImmutableArray<AdditionalText> appsettingsFiles,
     string baseNamespace,
     SourceProductionContext ctx)
@@ -19,24 +18,28 @@ public class FeatureFlagTypesCreator(
     private const string ROOT_CLASS_NAME = "FlagsRoot";
     private const string UNDEFINED_CLASS_NAME = "Undefined";
 
+    private readonly SourceCodeCreator code = new(baseNamespace, ctx.CancellationToken);
+
     /// <summary>
-    /// Reads the structure of feature flags from appsettings and generates types representing them
+    /// Reads the structure of feature flags from appsettings
+    /// and generates classes to match that structure
     /// </summary>
-    public void ScanAppsettingsAndCreateSourceFiles()
+    public void ScanAppsettingsAndGenerateMatchingSourceFiles()
     {
-        GenerateTheUndefinedType();
+        // add 'unknown' type; used only when something goes wrong
+        code.GetUnknownTypeClass(UNDEFINED_CLASS_NAME).WriteTo(ctx);
 
         if (!IsFileCountValid(appsettingsFiles, out Diagnostic? diagnostic1))
         {
             ctx.ReportDiagnostic(diagnostic1);
-            GenerateRootClassRepresentingError(diagnostic1.GetMessage());
+            code.GetErrorIndicatingClass(diagnostic1.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
             return;
         }
 
-        if (!TryReadAndParseAppsettings(out var parsedStructure, out var diagnostic2))
+        if (!TryReadFeatureFlagsStructureFromAppsettings(out JsonType? parsedStructure, out Diagnostic? diagnostic2))
         {
             ctx.ReportDiagnostic(diagnostic2);
-            GenerateRootClassRepresentingError(diagnostic2.GetMessage());
+            code.GetErrorIndicatingClass(diagnostic2.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
             return;
         }
 
@@ -47,7 +50,8 @@ public class FeatureFlagTypesCreator(
         // TODO: use the created type name to generate a service collection extensions method
     }
 
-    private bool TryReadAndParseAppsettings([NotNullWhen(true)] out JsonType? parsedStructure,
+    private bool TryReadFeatureFlagsStructureFromAppsettings(
+        [NotNullWhen(true)] out JsonType? parsedStructure,
         [NotNullWhen(false)] out Diagnostic? diagnostic)
     {
         AdditionalText file = appsettingsFiles.First();
@@ -66,6 +70,7 @@ public class FeatureFlagTypesCreator(
         ctx.CancellationToken.ThrowIfCancellationRequested();
         JsonElement featureFlagsSection = appsettingsDoc.RootElement.GetProperty("FeatureFlags"u8);
         parsedStructure = JsonStructureParser.Parse(featureFlagsSection);
+
         diagnostic = null;
         return true;
     }
@@ -86,7 +91,8 @@ public class FeatureFlagTypesCreator(
                 .ToArray();
 
         var className = $"{nameInParent}Type";
-        GenerateClassCodeForAppsettingsObject(@namespace, propsAndTheirTypes, className);
+        code.GetAppsettingsObjectClass(@namespace, propsAndTheirTypes, className).WriteTo(ctx);
+
         return (requiredNamespace: @namespace, typeName: className);
 
         // local helper function
@@ -115,7 +121,7 @@ public class FeatureFlagTypesCreator(
     private (string? requiredNamespace, string typeName) GetTypeOfArrayJsonItem(
         JsonArrayType jsonStructure, string @namespace, string nameInParent)
     {
-        string nameForArrayItem = $"{nameInParent}Item";
+        var nameForArrayItem = $"{nameInParent}Item";
 
         (string? requiredNamespace, string typeName) result = jsonStructure.ItemType switch
         {
@@ -140,78 +146,8 @@ public class FeatureFlagTypesCreator(
             { Kind: JsonValueKind.Number } => (null, "int"),
             { Kind: JsonValueKind.True } => (null, "bool"),
             { Kind: JsonValueKind.False } => (null, "bool"),
-            { Kind: JsonValueKind.Null } => (null, "float"),
             _ => (baseNamespace, UNDEFINED_CLASS_NAME),
         };
-    }
-
-    // TODO: instead of using ctx, return a CodeDetails object and let the caller call ctx
-    private void GenerateClassCodeForAppsettingsObject(
-        string @namespace,
-        PropDetails[] propsAndTheirTypes,
-        string className)
-    {
-        IEnumerable<string> propsLines = propsAndTheirTypes
-            .Select(x => $"public required {x.PropType} {x.PropName} {{ get; set; }}");
-
-        IEnumerable<string> usingStatements = propsAndTheirTypes
-            .Select(x => x.RequiredNamespace)
-            .Distinct()
-            .Where(ns => ns != null)
-            .Select(ns => $"using {ns};");
-
-        // TODO: order of members: primitives, arrays, nested objects
-        // TODO: PERF: use a string builder to build the class's code
-
-        ctx.AddSource(
-            hintName: $"{className}.generated.cs",
-            source: $$"""
-                      {{string.Join("\n", usingStatements)}}
-
-                      namespace {{@namespace}};
-
-                      public class {{className}}
-                      {
-                          {{string.Join("\n    ", propsLines)}}
-                      }
-                      """);
-    }
-
-    private void GenerateRootClassRepresentingError(string errorMessage)
-    {
-        ctx.CancellationToken.ThrowIfCancellationRequested();
-
-        ctx.AddSource(
-            hintName: $"{ROOT_CLASS_NAME}.generated.cs",
-            source: $$"""
-                      namespace {{baseNamespace}};
-
-                      public class {{ROOT_CLASS_NAME}}
-                      {
-                          /// <summary>
-                          /// {{HttpUtility.HtmlEncode(errorMessage)}}
-                          /// </summary>
-                          public string COMPILATION_ERROR = "File could not be generated. See the doc comment of this property for details";
-                      }
-                      """);
-    }
-
-    private void GenerateTheUndefinedType()
-    {
-        ctx.CancellationToken.ThrowIfCancellationRequested();
-
-        ctx.AddSource(
-            hintName: $"{UNDEFINED_CLASS_NAME}.generated.cs",
-            source: $$"""
-                      namespace {{baseNamespace}};
-
-                      /// <summary>
-                      /// The type of the item in appsettings could not be identified
-                      /// </summary>
-                      public class {{UNDEFINED_CLASS_NAME}}
-                      {
-                      }
-                      """);
     }
 
     private static bool IsFileCountValid(ImmutableArray<AdditionalText> files,
