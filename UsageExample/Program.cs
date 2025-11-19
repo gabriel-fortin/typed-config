@@ -6,6 +6,7 @@ using UsageExample.GeneratedFeatureFlags.TwoWayMessaging.RefreshIntervals;
 var builder = Host.CreateApplicationBuilder(args);
 
 // builder.Services.AddSingleton<IFeatureManager, FeatureManager>();
+builder.Services.AddGeneratedFeatureFlags();
 
 var host = builder.Build();
 
@@ -33,11 +34,6 @@ if (features["IncomeSupport"].IsEnabled)
 }
 */
 
-// namespaces/classes for when we generate:
-// ...FeatureFlags.FlagsRoot
-// ...FeatureFlags.FlagsRoot.TwoWayMessagingFlags
-// ...FeatureFlags.FlagsRoot.IncomeSupportFlags
-// ...FeatureFlags.FlagsRoot.IncomeSupportFlags.Page8Flags
 
 // temporary: this will eventually be generated; located in .AddGeneratedFeatureFlags() service collection extension
 FlagsRootType features = host.Services.GetRequiredService<FlagsRootType>();

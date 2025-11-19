@@ -95,4 +95,25 @@ public class SourceCodeCreator(
               }
               """);
     }
+
+    [Pure]
+    public SourceCodeDetails GetServiceCollectionExtensionMethod(string className)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        return new(
+            FileName: "ServiceCollectionExtensions.generated.cs",
+            SourceCodeText:
+            $$"""
+              namespace {{defaultNamespace}};
+              
+              public static class ServiceCollectionExtensions
+              {
+                  public static IServiceCollection AddGeneratedFeatureFlags(this IServiceCollection services)
+                  {
+                      return services.AddSingleton<{{className}}>();
+                  }
+              }
+              """);
+    }
 }

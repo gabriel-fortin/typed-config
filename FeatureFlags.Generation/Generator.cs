@@ -10,29 +10,29 @@ public class Generator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
         // prepare pipeline: getting the root namespace of the project that uses this generator
-        IncrementalValueProvider<string> rootNamespace =
-            initContext.AnalyzerConfigOptionsProvider.Select(GetRootNamespace);
+        IncrementalValueProvider<string> baseNamespaceProvider =
+            initContext.AnalyzerConfigOptionsProvider
+                .Select(GetRootNamespace)
+                .Select((x, _) => x + ".GeneratedFeatureFlags");
 
         // prepare pipeline: getting the appsettings files of the project that uses this generator
-        IncrementalValueProvider<ImmutableArray<AdditionalText>> appsettingsFiles =
+        IncrementalValueProvider<ImmutableArray<AdditionalText>> appsettingsFilesProvider =
             initContext.AdditionalTextsProvider
                 .Where(static text => text.Path.EndsWith("appsettings.json"))
                 .Collect();
 
         // use the data from the pipelines to start generating source code
         initContext.RegisterSourceOutput(
-            source: appsettingsFiles.Combine(rootNamespace),
+            source: appsettingsFilesProvider.Combine(baseNamespaceProvider),
             action: (sourceProductionContext, input) =>
             {
-                ImmutableArray<AdditionalText> files = input.Left;
-                string baseNamespace = input.Right + ".GeneratedFeatureFlags";
-
-                // the core logic is hidden in here
-                var generator = new FeatureFlagTypesGenerator(baseNamespace, sourceProductionContext);
-                generator.ScanAppsettingsAndGenerateMatchingSourceFiles(files);
+                // the core logic is hidden in these lines
+                var generator = new FeatureFlagTypesGenerator(
+                    baseNamespace: input.Right,
+                    ctx: sourceProductionContext);
+                generator.ScanAppsettingsAndGenerateMatchingSourceFiles(appsettingsFiles: input.Left);
+                generator.GenerateServiceCollectionExtensionMethod();
             });
-
-        // TODO: generate service collection extension method using RegisterPostInitializationOutput
     }
 
     private static string GetRootNamespace(AnalyzerConfigOptionsProvider opts, CancellationToken _)

@@ -47,7 +47,12 @@ public class FeatureFlagTypesGenerator(
 
         // the actual generation of classes matching appsettings items
         var (ns, type) = GenerateAndGetTypeOfObjectJsonItem(jsonObject, baseNamespace, ROOT_CLASS_NAME);
-        // TODO: use the created type name to generate a service collection extensions method
+    }
+
+
+    public void GenerateServiceCollectionExtensionMethod()
+    {
+        code.GetServiceCollectionExtensionMethod(ROOT_CLASS_NAME).WriteTo(ctx);
     }
 
     private bool TryReadFeatureFlagsStructureFromAppsettings(
