@@ -30,8 +30,8 @@ public class Generator : IIncrementalGenerator
                 var generator = new FeatureFlagTypesGenerator(
                     baseNamespace: input.Right,
                     ctx: sourceProductionContext);
-                generator.ScanAppsettingsAndGenerateMatchingSourceFiles(appsettingsFiles: input.Left);
                 generator.GenerateServiceCollectionExtensionMethod();
+                generator.ScanAppsettingsAndGenerateMatchingSourceFiles(appsettingsFiles: input.Left);
             });
     }
 

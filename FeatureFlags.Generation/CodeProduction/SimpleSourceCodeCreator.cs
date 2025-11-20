@@ -1,18 +1,17 @@
-﻿using System.Diagnostics.Contracts;
-using System.Web;
+﻿using System.Web;
 using org.g14.FeatureFlags.Generation.CodeProduction.Models;
 
 namespace org.g14.FeatureFlags.Generation.CodeProduction;
 
 /// <summary>
 /// Creates text contents of source code files.
+/// This implementation is simple, it focuses on readability.
 /// </summary>
-public class SourceCodeCreator(
+public class SimpleSourceCodeCreator(
     string defaultNamespace,
     CancellationToken? cancellationToken = null
-)
+) : ISourceCodeCreator
 {
-    [Pure]
     public SourceCodeDetails GetAppsettingsObjectClass(
         string @namespace,
         PropDetails[] propsAndTheirTypes,
@@ -28,8 +27,6 @@ public class SourceCodeCreator(
             .Distinct()
             .Where(ns => ns != null)
             .Select(ns => $"using {ns};");
-
-        // TODO: PERF: use a string builder to build the class's code
 
         return new(
             FileName: $"{className}.generated.cs",
@@ -51,7 +48,6 @@ public class SourceCodeCreator(
     /// This prevents some compilation errors (because the type is there)
     /// and allows to convey some details of the problem (in addition to regular diagnostics).
     /// </summary>
-    [Pure]
     public SourceCodeDetails GetErrorIndicatingClass(string errorMessage, string className)
     {
         cancellationToken?.ThrowIfCancellationRequested();
@@ -76,7 +72,6 @@ public class SourceCodeCreator(
     /// The unknown type is used if the actual type for an appsettings item could not be determined.
     /// Possible causes: the generator does not support something, bug.
     /// </summary>
-    [Pure]
     public SourceCodeDetails GetUnknownTypeClass(string className)
     {
         cancellationToken?.ThrowIfCancellationRequested();
@@ -96,7 +91,6 @@ public class SourceCodeCreator(
               """);
     }
 
-    [Pure]
     public SourceCodeDetails GetServiceCollectionExtensionMethod(string className)
     {
         cancellationToken?.ThrowIfCancellationRequested();

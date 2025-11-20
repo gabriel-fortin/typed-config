@@ -17,7 +17,7 @@ public class FeatureFlagTypesGenerator(
     private const string ROOT_CLASS_NAME = "FlagsRootType";
     private const string UNDEFINED_CLASS_NAME = "Undefined";
 
-    private readonly SourceCodeCreator code = new(baseNamespace, ctx.CancellationToken);
+    private readonly ISourceCodeCreator code = new EfficientSourceCodeCreator(baseNamespace, ctx.CancellationToken);
 
     /// <summary>
     /// Reads the structure of feature flags from appsettings
