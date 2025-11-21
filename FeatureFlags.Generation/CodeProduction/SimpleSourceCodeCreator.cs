@@ -18,8 +18,8 @@ public class SimpleSourceCodeCreator(
         string className)
     {
         cancellationToken?.ThrowIfCancellationRequested();
-        
-        IEnumerable<string> propsLines = propsAndTheirTypes
+
+        IEnumerable<string> propsDefinitions = propsAndTheirTypes
             .Select(x => $"public required {x.PropType} {x.PropName} {{ get; set; }}");
 
         IEnumerable<string> usingStatements = propsAndTheirTypes
@@ -38,7 +38,7 @@ public class SimpleSourceCodeCreator(
 
               public class {{className}}
               {
-                  {{string.Join("\n    ", propsLines)}}
+                  {{string.Join("\n    ", propsDefinitions)}}
               }
               """);
     }
@@ -100,12 +100,18 @@ public class SimpleSourceCodeCreator(
             SourceCodeText:
             $$"""
               namespace {{defaultNamespace}};
-              
+
               public static class ServiceCollectionExtensions
               {
                   public static IServiceCollection AddGeneratedFeatureFlags(this IServiceCollection services)
                   {
-                      return services.AddSingleton<{{className}}>();
+                      return services.AddSingleton<{{className}}>(services =>
+                      {
+                          string key = "{{Const.FlagsRootKey}}";
+                          IConfiguration configuration = services.GetRequiredService<IConfiguration>();
+                          IConfigurationSection configSection = configuration.GetSection(key);
+                          return configSection.Get<{{className}}>();
+                      });
                   }
               }
               """);

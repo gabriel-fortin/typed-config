@@ -18,6 +18,7 @@ public class FeatureFlagTypesGenerator(
     private const string UNDEFINED_CLASS_NAME = "Undefined";
 
     private readonly ISourceCodeCreator code = new EfficientSourceCodeCreator(baseNamespace, ctx.CancellationToken);
+    // private readonly ISourceCodeCreator code = new SimpleSourceCodeCreator(baseNamespace, ctx.CancellationToken);
 
     /// <summary>
     /// Reads the structure of feature flags from appsettings
@@ -46,7 +47,7 @@ public class FeatureFlagTypesGenerator(
         if (parsedStructure is not JsonObjectType jsonObject) return;
 
         // the actual generation of classes matching appsettings items
-        var (ns, type) = GenerateAndGetTypeOfObjectJsonItem(jsonObject, baseNamespace, ROOT_CLASS_NAME);
+        _ = GenerateAndGetTypeOfObjectJsonItem(jsonObject, baseNamespace, ROOT_CLASS_NAME);
     }
 
 
@@ -74,7 +75,7 @@ public class FeatureFlagTypesGenerator(
 
         using JsonDocument appsettingsDoc = JsonDocument.Parse(appsettingsSourceText.ToString());
         ctx.CancellationToken.ThrowIfCancellationRequested();
-        JsonElement featureFlagsSection = appsettingsDoc.RootElement.GetProperty("FeatureFlags"u8);
+        JsonElement featureFlagsSection = appsettingsDoc.RootElement.GetProperty(Const.FlagsRootKey);
         parsedStructure = JsonStructureParser.Parse(featureFlagsSection);
 
         diagnostic = null;

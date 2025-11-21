@@ -22,12 +22,12 @@ public class EfficientSourceCodeCreator(
 
         var code = new StringBuilder();
 
-        foreach (string ns in propsAndTheirTypes
+        foreach (string? ns in propsAndTheirTypes
                      .Select(x => x.RequiredNamespace)
                      .Distinct()
-                     .Where(ns => ns != null)!)
+                     .Where(ns => ns != null))
         {
-            code.Append("using ").Append(ns).AppendLine(";");
+            code.Append("using ").Append(ns!).AppendLine(";");
         }
 
         code.AppendLine();
@@ -107,7 +107,13 @@ public class EfficientSourceCodeCreator(
         code.Append("    public static IServiceCollection")
             .AppendLine(" AddGeneratedFeatureFlags(this IServiceCollection services)");
         code.AppendLine("    {");
-        code.Append("        return services.AddSingleton<").Append(className).AppendLine(">();");
+        code.Append("        return services.AddSingleton<").Append(className).AppendLine(">(services =>");
+        code.AppendLine("        {");
+        code.Append("            string key = \"").Append(Const.FlagsRootKey).AppendLine("\";");
+        code.AppendLine("            IConfiguration configuration = services.GetRequiredService<IConfiguration>();");
+        code.AppendLine("            IConfigurationSection configSection = configuration.GetSection(key);");
+        code.Append("            return configSection.Get<").Append(className).AppendLine(">();");
+        code.AppendLine("        });");
         code.AppendLine("    }");
         code.AppendLine("}");
 
