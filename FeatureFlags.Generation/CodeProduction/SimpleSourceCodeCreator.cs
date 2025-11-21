@@ -20,7 +20,7 @@ public class SimpleSourceCodeCreator(
         cancellationToken?.ThrowIfCancellationRequested();
 
         IEnumerable<string> propsDefinitions = propsAndTheirTypes
-            .Select(x => $"public required {x.PropType} {x.PropName} {{ get; set; }}");
+            .Select(x => $"public required {x.PropType} {x.PropName} {{ get; init; }}");
 
         IEnumerable<string> usingStatements = propsAndTheirTypes
             .Select(x => x.RequiredNamespace)

@@ -40,7 +40,7 @@ public class EfficientSourceCodeCreator(
         foreach (PropDetails x in propsAndTheirTypes)
         {
             code.Append("    public required ").Append(x.PropType).Append(' ')
-                .Append(x.PropName).AppendLine(" { get; set; }");
+                .Append(x.PropName).AppendLine(" { get; init; }");
         }
 
         code.AppendLine("}");
