@@ -86,7 +86,7 @@ public class FeatureFlagTypesGenerator(
     /// Computes the type for an appsettings item of the object kind.
     /// Internally, causes code generation for that type.
     /// </summary>
-    private (string requiredNamespace, string typeName) GenerateAndGetTypeOfObjectJsonItem(
+    private PartialPropDetails GenerateAndGetTypeOfObjectJsonItem(
         JsonObjectType jsonStructure, string @namespace, string className)
     {
         ctx.CancellationToken.ThrowIfCancellationRequested();
@@ -99,24 +99,26 @@ public class FeatureFlagTypesGenerator(
 
         code.GetAppsettingsObjectClass(@namespace, propsAndTheirTypes, className).WriteTo(ctx);
 
-        return (requiredNamespace: @namespace, typeName: className);
+        return new PartialPropDetails(
+            PropType: className,
+            RequiredNamespace: @namespace);
 
         // local helper function
         PropDetails GetTypeOfObjectProperty(KeyValuePair<string, JsonType> kvp)
         {
             (string propName, JsonType propDetails) = kvp;
 
-            (string? requiredNamespace, string type) = propDetails switch
+            PartialPropDetails partialResult = propDetails switch
             {
                 JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
                 JsonArrayType arr =>
                     GetTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", $"{propName}ItemType"),
                 JsonObjectType obj =>
                     GenerateAndGetTypeOfObjectJsonItem(obj, $"{@namespace}.{propName}", $"{propName}Type"),
-                _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+                _ => new(PropType: UNDEFINED_CLASS_NAME, RequiredNamespace: baseNamespace),
             };
 
-            return new PropDetails(requiredNamespace, type, propName);
+            return PropDetails.From(partialResult, propName);
         }
     }
 
@@ -124,33 +126,33 @@ public class FeatureFlagTypesGenerator(
     /// Computes the type for an appsettings item of the array kind.
     /// Possibly causes class code generation in downstream calls.
     /// </summary>
-    private (string? requiredNamespace, string typeName) GetTypeOfArrayJsonItem(
+    private PartialPropDetails GetTypeOfArrayJsonItem(
         JsonArrayType jsonStructure, string @namespace, string className)
     {
-        (string? requiredNamespace, string typeName) result = jsonStructure.ItemType switch
+        PartialPropDetails result = jsonStructure.ItemType switch
         {
             JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
             JsonArrayType array => GetTypeOfArrayJsonItem(array, @namespace, className),
             JsonObjectType obj => GenerateAndGetTypeOfObjectJsonItem(obj, @namespace, className),
-            _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+            _ => new(PropType: UNDEFINED_CLASS_NAME, RequiredNamespace: baseNamespace),
         };
 
-        result.typeName += "[]";
+        result.PropType += "[]";
         return result;
     }
 
     /// <summary>
     /// Computes the type for an appsettings item of the primitive kind.
     /// </summary>
-    private (string?, string) GetTypeOfPrimitiveJsonItem(JsonPrimitiveType jsonStructure)
+    private PartialPropDetails GetTypeOfPrimitiveJsonItem(JsonPrimitiveType jsonStructure)
     {
         return jsonStructure switch
         {
-            { Kind: JsonValueKind.String } => (null, "string"),
-            { Kind: JsonValueKind.Number } => (null, "int"),
-            { Kind: JsonValueKind.True } => (null, "bool"),
-            { Kind: JsonValueKind.False } => (null, "bool"),
-            _ => (baseNamespace, UNDEFINED_CLASS_NAME),
+            { Kind: JsonValueKind.String } => new(Const.StringType, RequiredNamespace: null),
+            { Kind: JsonValueKind.Number } => new(Const.IntType, RequiredNamespace: null),
+            { Kind: JsonValueKind.True } => new(Const.BoolType, RequiredNamespace: null),
+            { Kind: JsonValueKind.False } => new(Const.BoolType, RequiredNamespace: null),
+            _ => new(PropType: UNDEFINED_CLASS_NAME, RequiredNamespace: baseNamespace),
         };
     }
 

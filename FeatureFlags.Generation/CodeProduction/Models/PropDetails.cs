@@ -1,6 +1,15 @@
 ﻿namespace org.g14.FeatureFlags.Generation.CodeProduction.Models;
 
 public record struct PropDetails(
-    string? RequiredNamespace,
     string PropType,
-    string PropName);
+    string? RequiredNamespace,
+    string PropName)
+{
+    public static PropDetails From(PartialPropDetails partial, string propName)
+    {
+        return new PropDetails(
+            partial.PropType,
+            partial.RequiredNamespace,
+            propName);
+    }
+}
