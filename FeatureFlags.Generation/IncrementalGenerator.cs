@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace org.g14.FeatureFlags.Generation;
 
 [Generator(LanguageNames.CSharp)]
-public class Generator : IIncrementalGenerator
+public class IncrementalGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {

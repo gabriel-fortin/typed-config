@@ -94,7 +94,7 @@ public class FeatureFlagTypesGenerator(
         // generate nested types (required to generate properties for this class)
         PropDetails[] propsAndTheirTypes =
             jsonStructure.Properties
-                .Select(GetTypeOfObjectProperty)
+                .Select(GetOrGenerateTypeOfObjectProperty)
                 .ToArray();
 
         code.GetAppsettingsObjectClass(@namespace, propsAndTheirTypes, className).WriteTo(ctx);
@@ -104,7 +104,7 @@ public class FeatureFlagTypesGenerator(
             RequiredNamespace: @namespace);
 
         // local helper function
-        PropDetails GetTypeOfObjectProperty(KeyValuePair<string, JsonType> kvp)
+        PropDetails GetOrGenerateTypeOfObjectProperty(KeyValuePair<string, JsonType> kvp)
         {
             (string propName, JsonType propDetails) = kvp;
 
@@ -112,7 +112,7 @@ public class FeatureFlagTypesGenerator(
             {
                 JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
                 JsonArrayType arr =>
-                    GetTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", $"{propName}ItemType"),
+                    GetOrGenerateTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", $"{propName}ItemType"),
                 JsonObjectType obj =>
                     GenerateAndGetTypeOfObjectJsonItem(obj, $"{@namespace}.{propName}", $"{propName}Type"),
                 _ => new(PropType: UNDEFINED_CLASS_NAME, RequiredNamespace: baseNamespace),
@@ -126,13 +126,13 @@ public class FeatureFlagTypesGenerator(
     /// Computes the type for an appsettings item of the array kind.
     /// Possibly causes class code generation in downstream calls.
     /// </summary>
-    private PartialPropDetails GetTypeOfArrayJsonItem(
+    private PartialPropDetails GetOrGenerateTypeOfArrayJsonItem(
         JsonArrayType jsonStructure, string @namespace, string className)
     {
         PartialPropDetails result = jsonStructure.ItemType switch
         {
             JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
-            JsonArrayType array => GetTypeOfArrayJsonItem(array, @namespace, className),
+            JsonArrayType array => GetOrGenerateTypeOfArrayJsonItem(array, @namespace, className),
             JsonObjectType obj => GenerateAndGetTypeOfObjectJsonItem(obj, @namespace, className),
             _ => new(PropType: UNDEFINED_CLASS_NAME, RequiredNamespace: baseNamespace),
         };
