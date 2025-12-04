@@ -43,7 +43,7 @@ public class EfficientSourceCodeCreator(
                 .Append(x.PropName).AppendLine(" { get; init; }");
         }
 
-        code.AppendLine("}");
+        code.Append("}");
 
         return new(
             FileName: $"{className}.generated.cs",
@@ -62,11 +62,11 @@ public class EfficientSourceCodeCreator(
         code.Append("public class ").AppendLine(className);
         code.AppendLine("{");
         code.AppendLine("    /// <summary>");
-        code.Append("    /// ").Append(HttpUtility.HtmlEncode(errorMessage)).AppendLine("}");
+        code.Append("    /// ").AppendLine(HttpUtility.HtmlEncode(errorMessage));
         code.AppendLine("    /// </summary>");
         code.Append("    public string COMPILATION_ERROR =")
             .AppendLine(""" "File could not be generated. See the doc comment of this property for details";""");
-        code.AppendLine("}");
+        code.Append("}");
 
         return new(
             FileName: $"{className}.generated.cs",
@@ -86,7 +86,7 @@ public class EfficientSourceCodeCreator(
         code.AppendLine("/// The type of the item in appsettings could not be identified");
         code.AppendLine("/// </summary>");
         code.Append("public class ").AppendLine(className);
-        code.AppendLine("{").AppendLine("}");
+        code.AppendLine("{").Append("}");
 
         return new(
             FileName: $"{className}.generated.cs",
@@ -115,7 +115,7 @@ public class EfficientSourceCodeCreator(
         code.Append("            return configSection.Get<").Append(className).AppendLine(">();");
         code.AppendLine("        });");
         code.AppendLine("    }");
-        code.AppendLine("}");
+        code.Append("}");
 
         return new(
             FileName: "ServiceCollectionExtensions.generated.cs",
