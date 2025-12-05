@@ -73,5 +73,4 @@ if (features.TwoWayMessaging.IsEnabled)
 // TODO: DOC: conventions for consumers: if I have a Bagels feature in the project, I should not create a Bagels bool value in appsettings; I should create a Bagels object with a nested IsEnabled bool value
 // TODO: DOC: conventions in generator code: 'create' or 'get' means a local operation that doesn't have side effects; 'generate' means adding source code to the compilation
 // TODO: analyzer checking that bool values in appsettings have names starting with is/was/has/can/should/allow/enable/use... This is complementary to the naming convention
-// TODO: add test project to compare outputs from the two implementations of Source Code Creator
 

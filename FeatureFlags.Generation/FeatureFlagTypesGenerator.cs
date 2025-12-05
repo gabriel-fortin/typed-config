@@ -14,6 +14,12 @@ public class FeatureFlagTypesGenerator(
     string baseNamespace,
     SourceProductionContext ctx)
 {
+    private static readonly JsonDocumentOptions ParsingOptions = new ()
+    {
+        AllowTrailingCommas = true,
+        CommentHandling = JsonCommentHandling.Skip,
+    };
+
     private const string ROOT_CLASS_NAME = "FlagsRootType";
     private const string UNDEFINED_CLASS_NAME = "Undefined";
 
@@ -73,7 +79,7 @@ public class FeatureFlagTypesGenerator(
             return false;
         }
 
-        using JsonDocument appsettingsDoc = JsonDocument.Parse(appsettingsSourceText.ToString());
+        using JsonDocument appsettingsDoc = JsonDocument.Parse(appsettingsSourceText.ToString(), ParsingOptions);
         ctx.CancellationToken.ThrowIfCancellationRequested();
         JsonElement featureFlagsSection = appsettingsDoc.RootElement.GetProperty(Const.FlagsRootKey);
         parsedStructure = JsonStructureParser.Parse(featureFlagsSection);
