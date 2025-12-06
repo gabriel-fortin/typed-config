@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureFlags.Generation", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureFlags.Generation.Tests", "FeatureFlags.Generation.Tests\FeatureFlags.Generation.Tests.csproj", "{A8F3D4E5-6B7C-4D8E-9F1A-2B3C4D5E6F7A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureFlags.Analyzer", "FeatureFlags.Analyzer\FeatureFlags.Analyzer.csproj", "{B9F4E5D6-7C8A-4E9F-A1B2-3C4D5E6F7A8B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{A8F3D4E5-6B7C-4D8E-9F1A-2B3C4D5E6F7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8F3D4E5-6B7C-4D8E-9F1A-2B3C4D5E6F7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8F3D4E5-6B7C-4D8E-9F1A-2B3C4D5E6F7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9F4E5D6-7C8A-4E9F-A1B2-3C4D5E6F7A8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9F4E5D6-7C8A-4E9F-A1B2-3C4D5E6F7A8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9F4E5D6-7C8A-4E9F-A1B2-3C4D5E6F7A8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9F4E5D6-7C8A-4E9F-A1B2-3C4D5E6F7A8B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
