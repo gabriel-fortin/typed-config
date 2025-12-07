@@ -69,7 +69,4 @@ if (features.TwoWayMessaging.IsEnabled)
 
 // host.Run();
 
-// TODO: DOC: Limitation: all keys must be present in `appsettings.json`. Scanning other files might be added later.
-// TODO: DOC: conventions for consumers: if I have a Bagels feature in the project, I should not create a Bagels bool value in appsettings; I should create a Bagels object with a nested IsEnabled bool value
-// TODO: DOC: conventions in generator code: 'create' or 'get' means a local operation that doesn't have side effects; 'generate' means adding source code to the compilation
 
