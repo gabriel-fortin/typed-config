@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
+using System.Text.Json;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 
 namespace org.g14.FeatureFlags.Analyzer;
 
@@ -21,43 +21,101 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        // Register for syntax node analysis to check property declarations
-        context.RegisterSyntaxNodeAction(AnalyzePropertyDeclaration, SyntaxKind.PropertyDeclaration);
+        // Register for additional file analysis to check appsettings.json
+        context.RegisterAdditionalFileAction(AnalyzeAppsettingsFile);
     }
 
-    private static void AnalyzePropertyDeclaration(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeAppsettingsFile(AdditionalFileAnalysisContext context)
     {
-        var propertyDeclaration = (PropertyDeclarationSyntax)context.Node;
+        // Only analyze appsettings.json file
+        bool isAppsettingsFile = Path.GetFileName(context.AdditionalFile.Path)
+            .Equals("appsettings.json", StringComparison.OrdinalIgnoreCase);
+        if (!isAppsettingsFile) return;
 
-        // Check if the property type is bool
-        var typeInfo = context.SemanticModel.GetTypeInfo(propertyDeclaration.Type, context.CancellationToken);
-        if (typeInfo.Type?.SpecialType != SpecialType.System_Boolean)
+        SourceText? sourceText = context.AdditionalFile.GetText(context.CancellationToken);
+        if (sourceText == null) return;
+
+        try
         {
-            return;
+            var jsonText = sourceText.ToString();
+            using var document = JsonDocument.Parse(jsonText);
+            var root = document.RootElement;
+
+            // Look for the FeatureFlags node
+            if (root.TryGetProperty("FeatureFlags", out JsonElement featureFlagsNode))
+            {
+                AnalyzeJsonNode(context, featureFlagsNode, sourceText);
+            }
+        }
+        catch (JsonException)
+        {
+            // Invalid JSON - ignore
+        }
+    }
+
+    private static void AnalyzeJsonNode(
+        AdditionalFileAnalysisContext context,
+        JsonElement element,
+        SourceText sourceText)
+    {
+        if (element.ValueKind != JsonValueKind.Object) return;
+
+        foreach (JsonProperty property in element.EnumerateObject())
+        {
+            string propertyName = property.Name;
+
+            switch (property.Value.ValueKind)
+            {
+                // If this property is a boolean value
+                case JsonValueKind.True or JsonValueKind.False:
+                    // If the property name follows naming conventions
+                    if (!StartsWithValidBooleanPrefix(propertyName))
+                    {
+                        Location location = GetPropertyLocation(sourceText, propertyName, context.AdditionalFile.Path);
+
+                        var diagnostic = Diagnostic.Create(
+                            DiagnosticDescriptors.BooleanNamingConvention,
+                            location,
+                            propertyName);
+
+                        context.ReportDiagnostic(diagnostic);
+                    }
+
+                    break;
+                case JsonValueKind.Object:
+                    // Recursively analyze nested objects
+                    AnalyzeJsonNode(context, property.Value, sourceText);
+                    break;
+            }
+        }
+    }
+
+    private static Location GetPropertyLocation(SourceText sourceText, string propertyName, string filePath)
+    {
+        // Search for the property name in the source text
+        var searchPattern = $"""
+            "{propertyName}"
+            """;
+        int index = sourceText.ToString().IndexOf(searchPattern, StringComparison.Ordinal);
+
+        if (index < 0)
+        {
+            // Fallback if we can't find the exact location
+            return Location.Create(filePath, default, default);
         }
 
-        // Get the property name
-        var propertyName = propertyDeclaration.Identifier.Text;
-
-        // Check if the property name starts with a valid boolean prefix
-        if (!StartsWithValidBooleanPrefix(propertyName))
-        {
-            var diagnostic = Diagnostic.Create(
-                DiagnosticDescriptors.BooleanNamingConvention,
-                propertyDeclaration.Identifier.GetLocation(),
-                propertyName);
-
-            context.ReportDiagnostic(diagnostic);
-        }
+        int position = index + 1; // Position after the opening quote
+        var span = new TextSpan(position, propertyName.Length);
+        LinePositionSpan lineSpan = sourceText.Lines.GetLinePositionSpan(span);
+        return Location.Create(filePath, span, lineSpan);
     }
 
     private static bool StartsWithValidBooleanPrefix(string propertyName)
     {
         string lowerName = propertyName.ToLowerInvariant();
-        
-        return Const.BooleanPrefixes.Any(prefix => 
-            lowerName.StartsWith(prefix) && 
+
+        return Const.BooleanPrefixes.Any(prefix =>
+            lowerName.StartsWith(prefix) &&
             (lowerName.Length == prefix.Length || char.IsUpper(propertyName[prefix.Length])));
     }
 }
-
