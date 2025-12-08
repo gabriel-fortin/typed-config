@@ -38,6 +38,7 @@ public class SimpleSourceCodeCreator(
 
               namespace {{@namespace}};
 
+              {{Const.GeneratedCodeAttribute}}
               public class {{className}}
               {
                   {{string.Join("\n    ", propsDefinitions)}}
@@ -62,6 +63,7 @@ public class SimpleSourceCodeCreator(
               
               namespace {{defaultNamespace}};
 
+              {{Const.GeneratedCodeAttribute}}
               public class {{className}}
               {
                   /// <summary>
@@ -91,6 +93,7 @@ public class SimpleSourceCodeCreator(
               /// <summary>
               /// The type of the item in appsettings could not be identified
               /// </summary>
+              {{Const.GeneratedCodeAttribute}}
               public class {{className}}
               {
               }
@@ -109,6 +112,7 @@ public class SimpleSourceCodeCreator(
               
               namespace {{defaultNamespace}};
 
+              {{Const.GeneratedCodeAttribute}}
               public static class ServiceCollectionExtensions
               {
                   public static IServiceCollection AddGeneratedFeatureFlags(this IServiceCollection services)

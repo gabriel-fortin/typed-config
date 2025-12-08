@@ -34,6 +34,7 @@ public class EfficientSourceCodeCreator(
 
         code.Append("namespace ").Append(@namespace).AppendLine(";").AppendLine();
 
+        code.AppendLine(Const.GeneratedCodeAttribute);
         code.Append("public class ").AppendLine(className);
         code.AppendLine("{");
 
@@ -59,6 +60,7 @@ public class EfficientSourceCodeCreator(
 
         code.Append("namespace ").Append(defaultNamespace).AppendLine(";").AppendLine();
 
+        code.AppendLine(Const.GeneratedCodeAttribute);
         code.Append("public class ").AppendLine(className);
         code.AppendLine("{");
         code.AppendLine("    /// <summary>");
@@ -85,6 +87,7 @@ public class EfficientSourceCodeCreator(
         code.AppendLine("/// <summary>");
         code.AppendLine("/// The type of the item in appsettings could not be identified");
         code.AppendLine("/// </summary>");
+        code.AppendLine(Const.GeneratedCodeAttribute);
         code.Append("public class ").AppendLine(className);
         code.AppendLine("{").Append("}");
 
@@ -102,6 +105,7 @@ public class EfficientSourceCodeCreator(
 
         code.Append("namespace ").Append(defaultNamespace).AppendLine(";").AppendLine();
 
+        code.AppendLine(Const.GeneratedCodeAttribute);
         code.AppendLine("public static class ServiceCollectionExtensions");
         code.AppendLine("{");
         code.Append("    public static IServiceCollection")

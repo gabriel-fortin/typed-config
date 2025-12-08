@@ -19,4 +19,9 @@ public static class Const
         //     If you make changes, your hard work will be lost when the code gets regenerated.
         // </auto-generated>
         """;
+
+    public static readonly string GeneratedCodeAttribute =
+        $"""
+        [System.CodeDom.Compiler.GeneratedCode("{typeof(Const).Assembly.GetName().Name}", "{typeof(Const).Assembly.GetName().Version?.ToString(3) ?? "unknown"}")]
+        """;
 }

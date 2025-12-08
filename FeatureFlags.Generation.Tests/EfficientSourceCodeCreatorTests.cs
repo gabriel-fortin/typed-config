@@ -5,7 +5,7 @@ using static org.g14.FeatureFlags.Generation.Tests.TestHelpers;
 
 namespace org.g14.FeatureFlags.Generation.Tests;
 
-/** Tests the efficient source code creator:
+/* Tests the efficient source code creator:
     - Empty classes
     - Classes with single/multiple properties
     - Array properties (int[])
@@ -24,6 +24,10 @@ public class EfficientSourceCodeCreatorTests
 {
     private EfficientSourceCodeCreator _creator = null!;
     private const string TestNamespace = "TestNamespace";
+
+    private static readonly string CurrentGeneratorVersion =
+        typeof(EfficientSourceCodeCreator).Assembly.GetName().Version?.ToString(3)
+        ?? throw new InvalidOperationException("Could not get assembly version");
 
     [SetUp]
     public void SetUp()
@@ -47,6 +51,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class EmptyClass
             {
             }
@@ -74,6 +79,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class SimpleClass
             {
                 public required string Name { get; init; }
@@ -104,6 +110,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class PersonClass
             {
                 public required string Name { get; init; }
@@ -134,6 +141,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class ArrayClass
             {
                 public required int[] Numbers { get; init; }
@@ -162,6 +170,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class MatrixClass
             {
                 public required int[][] Matrix { get; init; }
@@ -192,6 +201,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class CustomClass
             {
                 public required CustomType Data { get; init; }
@@ -225,6 +235,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class MultiNsClass
             {
                 public required TypeA PropA { get; init; }
@@ -258,6 +269,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class DuplicateNsClass
             {
                 public required TypeA PropA { get; init; }
@@ -284,6 +296,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class ErrorClass
             {
                 /// <summary>
@@ -312,6 +325,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class SpecialCharErrorClass
             {
                 /// <summary>
@@ -342,6 +356,7 @@ public class EfficientSourceCodeCreatorTests
             /// <summary>
             /// The type of the item in appsettings could not be identified
             /// </summary>
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public class UnknownClass
             {
             }
@@ -365,6 +380,7 @@ public class EfficientSourceCodeCreatorTests
 
             namespace TestNamespace;
 
+            [System.CodeDom.Compiler.GeneratedCode("org.g14.FeatureFlags.Generation", "{{CurrentGeneratorVersion}}")]
             public static class ServiceCollectionExtensions
             {
                 public static IServiceCollection AddGeneratedFeatureFlags(this IServiceCollection services)
