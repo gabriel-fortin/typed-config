@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace org.g14.FeatureFlags.Analyzer;
 
@@ -23,6 +24,13 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
 
         // Register for additional file analysis to check appsettings.json
         context.RegisterAdditionalFileAction(AnalyzeAppsettingsFile);
+
+        // Register compilation start so we can add symbol and operation actions
+        context.RegisterCompilationStartAction(compilationStartContext =>
+        {
+            compilationStartContext.RegisterOperationAction(AnalyzePropertyReferenceOperation,
+                OperationKind.PropertyReference);
+        });
     }
 
     private static void AnalyzeAppsettingsFile(AdditionalFileAnalysisContext context)
@@ -38,8 +46,8 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
         try
         {
             var jsonText = sourceText.ToString();
-            using var document = JsonDocument.Parse(jsonText);
-            var root = document.RootElement;
+            using JsonDocument document = JsonDocument.Parse(jsonText);
+            JsonElement root = document.RootElement;
 
             // Look for the FeatureFlags node
             if (root.TryGetProperty("FeatureFlags", out JsonElement featureFlagsNode))
@@ -117,5 +125,60 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
         return Const.BooleanPrefixes.Any(prefix =>
             lowerName.StartsWith(prefix) &&
             (lowerName.Length == prefix.Length || char.IsUpper(propertyName[prefix.Length])));
+    }
+
+    private static void AnalyzePropertyReferenceOperation(OperationAnalysisContext context)
+    {
+        if (context.Operation is not IPropertyReferenceOperation propRef) return;
+
+        IPropertySymbol propertySymbol = propRef.Property;
+        if (propertySymbol.Type.SpecialType != SpecialType.System_Boolean) return;
+
+        INamedTypeSymbol? containingType = propertySymbol.ContainingType;
+        if (containingType == null) return;
+
+        if (!IsGeneratedModel(containingType)) return;
+
+        string name = propertySymbol.Name;
+        if (StartsWithValidBooleanPrefix(name)) return;
+
+        // Report diagnostic at usage location
+        Location location = context.Operation.Syntax.GetLocation();
+        var diagnostic = Diagnostic.Create(DiagnosticDescriptors.BooleanNamingConvention, location, name);
+        context.ReportDiagnostic(diagnostic);
+    }
+
+    private static bool IsGeneratedModel(INamedTypeSymbol type)
+    {
+        // Check for [GeneratedCode] attribute
+        foreach (AttributeData attr in type.GetAttributes())
+        {
+            INamedTypeSymbol? attrClass = attr.AttributeClass;
+            if (attrClass?.ToDisplayString() == "System.CodeDom.Compiler.GeneratedCodeAttribute")
+            {
+                return true;
+            }
+        }
+
+        // Check namespace contains Generated
+        string @namespace = type.ContainingNamespace?.ToDisplayString() ?? string.Empty;
+        if (@namespace.Contains("Generated", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // Check file paths for generated file patterns
+        foreach (Location loc in type.Locations)
+        {
+            if (!loc.IsInSource) continue;
+            string path = loc.SourceTree?.FilePath ?? string.Empty;
+            if (path.Contains(".g.cs", StringComparison.OrdinalIgnoreCase) ||
+                path.Contains("generated", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
