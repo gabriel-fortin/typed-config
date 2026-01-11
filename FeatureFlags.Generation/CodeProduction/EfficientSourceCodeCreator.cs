@@ -1,0 +1,134 @@
+﻿using System.Text;
+using System.Web;
+using org.g14.FeatureFlags.Generation.CodeProduction.Models;
+
+namespace org.g14.FeatureFlags.Generation.CodeProduction;
+
+/// <summary>
+/// Creates text contents of source code files.
+/// This implementation focuses on performance. (Also, uses environment-specific end-of-line characters)
+/// </summary>
+public class EfficientSourceCodeCreator(
+    string defaultNamespace,
+    CancellationToken? cancellationToken = null
+) : ISourceCodeCreator
+{
+    public SourceCodeDetails GetAppsettingsObjectClass(
+        string @namespace,
+        PropDetails[] propsAndTheirTypes,
+        string className)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        StringBuilder code = CreateCodeBuilder();
+
+        foreach (string? ns in propsAndTheirTypes
+                     .Select(x => x.RequiredNamespace)
+                     .Distinct()
+                     .Where(ns => ns != null))
+        {
+            code.Append("using ").Append(ns!).AppendLine(";");
+        }
+
+        code.AppendLine();
+
+        code.Append("namespace ").Append(@namespace).AppendLine(";").AppendLine();
+
+        code.AppendLine(Const.GeneratedCodeAttribute);
+        code.Append("public class ").AppendLine(className);
+        code.AppendLine("{");
+
+        foreach (PropDetails x in propsAndTheirTypes)
+        {
+            code.Append("    public required ").Append(x.PropType).Append(' ')
+                .Append(x.PropName).AppendLine(" { get; init; }");
+        }
+
+        code.Append("}");
+
+        return new(
+            FileName: $"{className}.generated.cs",
+            SourceCodeText: code.ToString()
+        );
+    }
+
+    public SourceCodeDetails GetErrorIndicatingClass(string errorMessage, string className)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        StringBuilder code = CreateCodeBuilder();
+
+        code.Append("namespace ").Append(defaultNamespace).AppendLine(";").AppendLine();
+
+        code.AppendLine(Const.GeneratedCodeAttribute);
+        code.Append("public class ").AppendLine(className);
+        code.AppendLine("{");
+        code.AppendLine("    /// <summary>");
+        code.Append("    /// ").AppendLine(HttpUtility.HtmlEncode(errorMessage));
+        code.AppendLine("    /// </summary>");
+        code.Append("    public string COMPILATION_ERROR =")
+            .AppendLine(""" "File could not be generated. See the doc comment of this property for details";""");
+        code.Append("}");
+
+        return new(
+            FileName: $"{className}.generated.cs",
+            SourceCodeText: code.ToString()
+        );
+    }
+
+    public SourceCodeDetails GetUnknownTypeClass(string className)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        StringBuilder code = CreateCodeBuilder();
+
+        code.Append("namespace ").Append(defaultNamespace).AppendLine(";").AppendLine();
+
+        code.AppendLine("/// <summary>");
+        code.AppendLine("/// The type of the item in appsettings could not be identified");
+        code.AppendLine("/// </summary>");
+        code.AppendLine(Const.GeneratedCodeAttribute);
+        code.Append("public class ").AppendLine(className);
+        code.AppendLine("{").Append("}");
+
+        return new(
+            FileName: $"{className}.generated.cs",
+            SourceCodeText: code.ToString()
+        );
+    }
+
+    public SourceCodeDetails GetServiceCollectionExtensionMethod(string className)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        StringBuilder code = CreateCodeBuilder();
+
+        code.Append("namespace ").Append(defaultNamespace).AppendLine(";").AppendLine();
+
+        code.AppendLine(Const.GeneratedCodeAttribute);
+        code.AppendLine("public static class ServiceCollectionExtensions");
+        code.AppendLine("{");
+        code.Append("    public static IServiceCollection")
+            .AppendLine(" AddGeneratedFeatureFlags(this IServiceCollection services)");
+        code.AppendLine("    {");
+        code.Append("        return services.AddSingleton<").Append(className).AppendLine(">(services =>");
+        code.AppendLine("        {");
+        code.Append("            string key = \"").Append(Const.FlagsRootKey).AppendLine("\";");
+        code.AppendLine("            IConfiguration configuration = services.GetRequiredService<IConfiguration>();");
+        code.AppendLine("            IConfigurationSection configSection = configuration.GetSection(key);");
+        code.Append("            return configSection.Get<").Append(className).AppendLine(">();");
+        code.AppendLine("        });");
+        code.AppendLine("    }");
+        code.Append("}");
+
+        return new(
+            FileName: "ServiceCollectionExtensions.generated.cs",
+            SourceCodeText: code.ToString()
+        );
+    }
+
+    private static StringBuilder CreateCodeBuilder()
+    {
+        return new StringBuilder(Const.AutogeneratedHeader).AppendLine().AppendLine();
+    }
+}
