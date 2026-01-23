@@ -1,6 +1,5 @@
 ﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace org.g14.FeatureFlags.Generation;
 
@@ -11,11 +10,11 @@ public class IncrementalGenerator : IIncrementalGenerator
     {
         // prepare pipeline: getting the root namespace of the project that uses this generator
         IncrementalValueProvider<string> baseNamespaceProvider =
-            initContext.AnalyzerConfigOptionsProvider
-                .Select(GetRootNamespace)
+            initContext.CompilationProvider
+                .Select((compilation, _) => compilation.AssemblyName ?? "AssemblyNamespaceDetectionFailed")
                 .Select((x, _) => x + ".GeneratedFeatureFlags");
 
-        // prepare pipeline: getting the appsettings files of the project that uses this generator
+        // prepare pipeline: getting the appsettings file of the project that uses this generator
         IncrementalValueProvider<ImmutableArray<AdditionalText>> appsettingsFilesProvider =
             initContext.AdditionalTextsProvider
                 .Where(static text => text.Path.EndsWith("appsettings.json"))
@@ -33,15 +32,5 @@ public class IncrementalGenerator : IIncrementalGenerator
                 generator.GenerateServiceCollectionExtensionMethod();
                 generator.ScanAppsettingsAndGenerateMatchingSourceFiles(appsettingsFiles: input.Left);
             });
-    }
-
-    private static string GetRootNamespace(AnalyzerConfigOptionsProvider opts, CancellationToken _)
-    {
-        if (opts.GlobalOptions.TryGetValue("build_property.RootNamespace", out var rn))
-            return rn;
-        if (opts.GlobalOptions.TryGetValue("build_property.AssemblyName", out var an))
-            return an;
-
-        return "Global";
     }
 }
