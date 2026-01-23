@@ -20,7 +20,12 @@ public class SimpleSourceCodeCreator(
         cancellationToken?.ThrowIfCancellationRequested();
 
         IEnumerable<string> propsDefinitions = propsAndTheirTypes
-            .Select(x => $"public required {x.PropType} {x.PropName} {{ get; init; }}");
+            .Select(x =>
+            {
+                string type = x.PropType;
+                string name = x.PropName.ToSafeIdentifier();
+                return $"public required {type} {name} {{ get; init; }}";
+            });
 
         IEnumerable<string> usingStatements = propsAndTheirTypes
             .Select(x => x.RequiredNamespace)
@@ -119,10 +124,8 @@ public class SimpleSourceCodeCreator(
                   {
                       return services.AddSingleton<{{className}}>(services =>
                       {
-                          string key = "{{Const.FlagsRootKey}}";
                           IConfiguration configuration = services.GetRequiredService<IConfiguration>();
-                          IConfigurationSection configSection = configuration.GetSection(key);
-                          return configSection.Get<{{className}}>();
+                          return configuration.Get<{{className}}>();
                       });
                   }
               }

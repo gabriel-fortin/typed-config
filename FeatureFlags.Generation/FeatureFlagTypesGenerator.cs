@@ -20,7 +20,7 @@ public class FeatureFlagTypesGenerator(
         CommentHandling = JsonCommentHandling.Skip,
     };
 
-    private const string ROOT_CLASS_NAME = "FlagsRootType";
+    private const string ROOT_CLASS_NAME = "TypedConfig";
     private const string UNDEFINED_CLASS_NAME = "Undefined";
 
     private readonly ISourceCodeCreator code = new EfficientSourceCodeCreator(baseNamespace, ctx.CancellationToken);
@@ -81,8 +81,7 @@ public class FeatureFlagTypesGenerator(
 
         using JsonDocument appsettingsDoc = JsonDocument.Parse(appsettingsSourceText.ToString(), ParsingOptions);
         ctx.CancellationToken.ThrowIfCancellationRequested();
-        JsonElement featureFlagsSection = appsettingsDoc.RootElement.GetProperty(Const.FlagsRootKey);
-        parsedStructure = JsonStructureParser.Parse(featureFlagsSection);
+        parsedStructure = JsonStructureParser.Parse(appsettingsDoc.RootElement);
 
         diagnostic = null;
         return true;

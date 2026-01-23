@@ -41,7 +41,7 @@ public class EfficientSourceCodeCreator(
         foreach (PropDetails x in propsAndTheirTypes)
         {
             code.Append("    public required ").Append(x.PropType).Append(' ')
-                .Append(x.PropName).AppendLine(" { get; init; }");
+                .Append(x.PropName.ToSafeIdentifier()).AppendLine(" { get; init; }");
         }
 
         code.Append("}");
@@ -113,10 +113,8 @@ public class EfficientSourceCodeCreator(
         code.AppendLine("    {");
         code.Append("        return services.AddSingleton<").Append(className).AppendLine(">(services =>");
         code.AppendLine("        {");
-        code.Append("            string key = \"").Append(Const.FlagsRootKey).AppendLine("\";");
         code.AppendLine("            IConfiguration configuration = services.GetRequiredService<IConfiguration>();");
-        code.AppendLine("            IConfigurationSection configSection = configuration.GetSection(key);");
-        code.Append("            return configSection.Get<").Append(className).AppendLine(">();");
+        code.Append("            return configuration.Get<").Append(className).AppendLine(">();");
         code.AppendLine("        });");
         code.AppendLine("    }");
         code.Append("}");

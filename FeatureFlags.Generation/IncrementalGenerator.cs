@@ -12,7 +12,7 @@ public class IncrementalGenerator : IIncrementalGenerator
         IncrementalValueProvider<string> baseNamespaceProvider =
             initContext.CompilationProvider
                 .Select((compilation, _) => compilation.AssemblyName ?? "AssemblyNamespaceDetectionFailed")
-                .Select((x, _) => x + ".GeneratedFeatureFlags");
+                .Select((x, _) => x + ".GeneratedTypedConfig");
 
         // prepare pipeline: getting the appsettings file of the project that uses this generator
         IncrementalValueProvider<ImmutableArray<AdditionalText>> appsettingsFilesProvider =
