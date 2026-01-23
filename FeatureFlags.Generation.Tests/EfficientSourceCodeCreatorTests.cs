@@ -387,10 +387,8 @@ public class EfficientSourceCodeCreatorTests
                 {
                     return services.AddSingleton<FlagsRootType>(services =>
                     {
-                        string key = "FeatureFlags";
                         IConfiguration configuration = services.GetRequiredService<IConfiguration>();
-                        IConfigurationSection configSection = configuration.GetSection(key);
-                        return configSection.Get<FlagsRootType>();
+                        return configuration.Get<FlagsRootType>();
                     });
                 }
             }

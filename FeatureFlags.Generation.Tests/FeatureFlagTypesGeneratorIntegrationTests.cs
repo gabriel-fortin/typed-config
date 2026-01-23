@@ -76,12 +76,11 @@ public class FeatureFlagTypesGeneratorIntegrationTests
     }
 
     [Test]
-    public void Generator_WithEmptyFeatureFlags_GeneratesTheRootType()
+    public void Generator_WithEmptyAppsettings_GeneratesTheRootType()
     {
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {}
         }
         """;
 
@@ -92,7 +91,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         Assert.That(result.Diagnostics.Where(IsErrorSeverity), Is.Empty);
         Assert.That(result.GeneratedTrees.Length, Is.GreaterThan(0));
         string generatedCode = GeneratedCode(result);
-        Assert.That(generatedCode, Does.Contain("class FlagsRootType"));
+        Assert.That(generatedCode, Does.Contain("class TypedConfig"));
     }
 
     [Test]
@@ -139,7 +138,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         Assert.That(result.Diagnostics.Where(IsErrorSeverity), Is.Empty);
         Assert.That(result.GeneratedTrees.Length, Is.GreaterThan(0));
         string generatedCode = GeneratedCode(result);
-        Assert.That(generatedCode, Does.Contain("class FlagsRootType"));
+        Assert.That(generatedCode, Does.Contain("class TypedConfig"));
         Assert.That(generatedCode, Does.Contain("public required string StringValue"));
         Assert.That(generatedCode, Does.Contain("public required int NumberValue"));
         Assert.That(generatedCode, Does.Contain("public required bool TrueValue"));
@@ -376,7 +375,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         Assert.That(result.Diagnostics.Where(IsErrorSeverity), Is.Empty);
         Assert.That(result.GeneratedTrees.Length, Is.GreaterThan(0));
         string generatedCode = GeneratedCode(result);
-        Assert.That(generatedCode, Does.Contain("class FlagsRootType"));
+        Assert.That(generatedCode, Does.Contain("class TypedConfig"));
         Assert.That(generatedCode, Does.Contain("public required string StringValue"));
         Assert.That(generatedCode, Does.Contain("public required int NumberValue"));
         Assert.That(generatedCode, Does.Contain("public required bool BoolValue"));
