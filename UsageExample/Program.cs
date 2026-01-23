@@ -1,7 +1,7 @@
 // using org.g14.FeatureFlags;
 
 using UsageExample.GeneratedTypedConfig;
-using UsageExample.GeneratedTypedConfig.FeatureFlags.TwoWayMessaging.RefreshIntervals;
+using UsageExample.GeneratedTypedConfig.Flags.TwoWayMessaging.RefreshIntervals;
 
 Console.WriteLine();
 
@@ -44,24 +44,24 @@ var host = builder.Build();
 TypedConfig config = host.Services.GetRequiredService<TypedConfig>();
 
 // do work
-bool b = config.FeatureFlags.TestBool;
-if (config.FeatureFlags.IncomeSupport.IsEnabled)
+bool b = config.Flags.TestBool;
+if (config.Flags.IncomeSupport.IsEnabled)
 {
     Console.WriteLine("Income Support");
-    int n = config.FeatureFlags.IncomeSupport.MagicNumber;
+    int n = config.Flags.IncomeSupport.MagicNumber;
     Console.WriteLine($"    Magic number is {n}");
 
-    if (config.FeatureFlags.IncomeSupport.Page8.IsEnabled)
+    if (config.Flags.IncomeSupport.Page8.IsEnabled)
     {
         Console.WriteLine("    Page 8");
     }
 }
 
-if (config.FeatureFlags.TwoWayMessaging.IsEnabled)
+if (config.Flags.TwoWayMessaging.IsEnabled)
 {
     Console.WriteLine("Two Way Messaging");
     Console.WriteLine("    Refresh intervals:");
-    foreach (RefreshIntervalsItemType interval in config.FeatureFlags.TwoWayMessaging.RefreshIntervals)
+    foreach (RefreshIntervalsItemType interval in config.Flags.TwoWayMessaging.RefreshIntervals)
     {
         Console.Out.WriteLine($"        {interval.Interval}s, {interval.Repeats} times");
     }
