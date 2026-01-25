@@ -4,8 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>org.g14.FeatureFlags.Generation</AssemblyName>
-        <RootNamespace>org.g14.FeatureFlags.Generation</RootNamespace>
+        <AssemblyName>org.g14.TypedConfig.Generator</AssemblyName>
+        <RootNamespace>org.g14.TypedConfig.Generator</RootNamespace>
         <Version>0.1.0</Version>
         
         <!-- prevent shooting ourselves in the foot; see https://stackoverflow.com/a/75767670/1387378 -->

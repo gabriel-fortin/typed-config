@@ -2,10 +2,10 @@
 using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Operations;
+using Microsoft.CodeAnalysis.Text;
 
-namespace org.g14.FeatureFlags.Analyzer;
+namespace org.g14.TypedConfig.Analyzer;
 
 /// <summary>
 /// Analyzer that checks boolean configuration values in appsettings.json follow naming conventions.

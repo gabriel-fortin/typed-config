@@ -14,10 +14,10 @@
     <!-- analyzers and generators use a special type of reference -->
     <!-- ––––––––––––––––––––––––––––––––––––––––––––––––-––––––– -->
     <ItemGroup>
-        <ProjectReference Include="..\FeatureFlags.Analyzer\FeatureFlags.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\TypedConfig.Analyzer\TypedConfig.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <!--  using ReferenceOutputAssembly="false" prevents analyzer code from being added to runtime DLLs -->
         
-        <ProjectReference Include="..\FeatureFlags.Generation\FeatureFlags.Generation.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\TypedConfig.Generator\TypedConfig.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <!--  using ReferenceOutputAssembly="false" prevents generator code from being added to runtime DLLs -->
     </ItemGroup>
 

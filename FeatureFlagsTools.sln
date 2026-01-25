@@ -4,11 +4,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureFlags", "FeatureFlag
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UsageExample", "UsageExample\UsageExample.csproj", "{6BA5C537-B56E-4D7B-8DF2-C607093E2F85}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureFlags.Generation", "FeatureFlags.Generation\FeatureFlags.Generation.csproj", "{82211C7C-2C66-4C2E-B5DE-3A1D2C3D24D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypedConfig.Generator", "TypedConfig.Generator\TypedConfig.Generator.csproj", "{82211C7C-2C66-4C2E-B5DE-3A1D2C3D24D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureFlags.Generation.Tests", "FeatureFlags.Generation.Tests\FeatureFlags.Generation.Tests.csproj", "{A8F3D4E5-6B7C-4D8E-9F1A-2B3C4D5E6F7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypedConfig.Generator.Tests", "TypedConfig.Generator.Tests\TypedConfig.Generator.Tests.csproj", "{A8F3D4E5-6B7C-4D8E-9F1A-2B3C4D5E6F7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FeatureFlags.Analyzer", "FeatureFlags.Analyzer\FeatureFlags.Analyzer.csproj", "{B9F4E5D6-7C8A-4E9F-A1B2-3C4D5E6F7A8B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypedConfig.Analyzer", "TypedConfig.Analyzer\TypedConfig.Analyzer.csproj", "{B9F4E5D6-7C8A-4E9F-A1B2-3C4D5E6F7A8B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

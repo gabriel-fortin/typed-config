@@ -1,4 +1,4 @@
-﻿namespace org.g14.FeatureFlags.Generation.Tests;
+﻿namespace org.g14.TypedConfig.Generator.Tests;
 
 public static class TestHelpers
 {

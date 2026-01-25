@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 
-namespace org.g14.FeatureFlags.Generation;
+namespace org.g14.TypedConfig.Generator;
 
 [Generator(LanguageNames.CSharp)]
 public class IncrementalGenerator : IIncrementalGenerator

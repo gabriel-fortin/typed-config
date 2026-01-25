@@ -5,8 +5,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
-        <AssemblyName>org.g14.FeatureFlags.Analyzer</AssemblyName>
-        <RootNamespace>org.g14.FeatureFlags.Analyzer</RootNamespace>
+        <AssemblyName>org.g14.TypedConfig.Analyzer</AssemblyName>
+        <RootNamespace>org.g14.TypedConfig.Analyzer</RootNamespace>
         <Version>0.1.0</Version>
         
         <!-- prevent shooting ourselves in the foot; see https://stackoverflow.com/a/75767670/1387378 -->

@@ -6,7 +6,8 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <RootNamespace>org.g14.FeatureFlags.Generation.Tests</RootNamespace>
+        <RootNamespace>org.g14.TypedConfig.Generator.Tests</RootNamespace>
+        <AssemblyName>org.g14.TypedConfig.Generator.Tests</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\FeatureFlags.Generation\FeatureFlags.Generation.csproj" />
+        <ProjectReference Include="..\TypedConfig.Generator\TypedConfig.Generator.csproj" />
     </ItemGroup>
 
 </Project>

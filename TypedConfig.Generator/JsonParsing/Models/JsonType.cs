@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace org.g14.FeatureFlags.Generation.JsonParsing.Models;
+namespace org.g14.TypedConfig.Generator.JsonParsing.Models;
 
 public abstract record JsonType
 {

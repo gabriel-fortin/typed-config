@@ -1,7 +1,7 @@
 ﻿using System.Web;
-using org.g14.FeatureFlags.Generation.CodeProduction.Models;
+using org.g14.TypedConfig.Generator.CodeProduction.Models;
 
-namespace org.g14.FeatureFlags.Generation.CodeProduction;
+namespace org.g14.TypedConfig.Generator.CodeProduction;
 
 /// <summary>
 /// Creates text contents of source code files.

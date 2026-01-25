@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.Contracts;
-using org.g14.FeatureFlags.Generation.CodeProduction.Models;
+using org.g14.TypedConfig.Generator.CodeProduction.Models;
 
-namespace org.g14.FeatureFlags.Generation.CodeProduction;
+namespace org.g14.TypedConfig.Generator.CodeProduction;
 
 public interface ISourceCodeCreator
 {

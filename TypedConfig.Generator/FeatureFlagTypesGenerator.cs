@@ -3,12 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using org.g14.FeatureFlags.Generation.CodeProduction;
-using org.g14.FeatureFlags.Generation.CodeProduction.Models;
-using org.g14.FeatureFlags.Generation.JsonParsing;
-using org.g14.FeatureFlags.Generation.JsonParsing.Models;
+using org.g14.TypedConfig.Generator.CodeProduction;
+using org.g14.TypedConfig.Generator.CodeProduction.Models;
+using org.g14.TypedConfig.Generator.JsonParsing;
+using org.g14.TypedConfig.Generator.JsonParsing.Models;
 
-namespace org.g14.FeatureFlags.Generation;
+namespace org.g14.TypedConfig.Generator;
 
 public class FeatureFlagTypesGenerator(
     string baseNamespace,

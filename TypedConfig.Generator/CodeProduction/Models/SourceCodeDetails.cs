@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace org.g14.FeatureFlags.Generation.CodeProduction.Models;
+namespace org.g14.TypedConfig.Generator.CodeProduction.Models;
 
 /// <summary>
 /// Represents to-be-generated source code

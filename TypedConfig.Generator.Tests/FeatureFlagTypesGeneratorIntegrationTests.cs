@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 
-namespace org.g14.FeatureFlags.Generation.Tests;
+namespace org.g14.TypedConfig.Generator.Tests;
 
 /// <summary>
 /// Tests for FeatureFlagTypesGenerator class which generates types based on appsettings JSON structure

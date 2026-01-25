@@ -1,4 +1,4 @@
-﻿namespace org.g14.FeatureFlags.Analyzer;
+﻿namespace org.g14.TypedConfig.Analyzer;
 
 /// <summary>
 /// Constants used throughout the analyzer.

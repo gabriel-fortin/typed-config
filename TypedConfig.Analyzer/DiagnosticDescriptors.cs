@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace org.g14.FeatureFlags.Analyzer;
+namespace org.g14.TypedConfig.Analyzer;
 
 /// <summary>
 /// Contains diagnostic descriptors for the FeatureFlags analyzer.

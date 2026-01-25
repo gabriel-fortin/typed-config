@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace org.g14.FeatureFlags.Generation;
+namespace org.g14.TypedConfig.Generator;
 
 public static class DiagnosticDescriptors
 {
