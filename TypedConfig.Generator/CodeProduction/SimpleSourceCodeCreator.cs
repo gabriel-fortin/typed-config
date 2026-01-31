@@ -120,7 +120,7 @@ public class SimpleSourceCodeCreator(
               {{Const.GeneratedCodeAttribute}}
               public static class ServiceCollectionExtensions
               {
-                  public static IServiceCollection AddGeneratedFeatureFlags(this IServiceCollection services)
+                  public static IServiceCollection AddTypedConfig(this IServiceCollection services)
                   {
                       return services.AddSingleton<{{className}}>(services =>
                       {

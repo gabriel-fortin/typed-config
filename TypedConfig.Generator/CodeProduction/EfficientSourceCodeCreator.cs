@@ -109,7 +109,7 @@ public class EfficientSourceCodeCreator(
         code.AppendLine("public static class ServiceCollectionExtensions");
         code.AppendLine("{");
         code.Append("    public static IServiceCollection")
-            .AppendLine(" AddGeneratedFeatureFlags(this IServiceCollection services)");
+            .AppendLine(" AddTypedConfig(this IServiceCollection services)");
         code.AppendLine("    {");
         code.Append("        return services.AddSingleton<").Append(className).AppendLine(">(services =>");
         code.AppendLine("        {");

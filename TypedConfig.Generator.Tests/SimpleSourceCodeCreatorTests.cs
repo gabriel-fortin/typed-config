@@ -384,7 +384,7 @@ public class SimpleSourceCodeCreatorTests
             [System.CodeDom.Compiler.GeneratedCode("org.g14.TypedConfig.Generator", "{{CurrentGeneratorVersion}}")]
             public static class ServiceCollectionExtensions
             {
-                public static IServiceCollection AddGeneratedFeatureFlags(this IServiceCollection services)
+                public static IServiceCollection AddTypedConfig(this IServiceCollection services)
                 {
                     return services.AddSingleton<FlagsRootType>(services =>
                     {

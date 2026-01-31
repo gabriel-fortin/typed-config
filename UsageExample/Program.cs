@@ -37,7 +37,7 @@ if (features["TwoWayMessaging"].IsEnabled)
 
 // initialise host, DI container etc.
 var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddGeneratedFeatureFlags();
+builder.Services.AddTypedConfig();
 var host = builder.Build();
 
 // retrieve dependency from DI container
