@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Version>1.0.0</Version>
+
+        <!-- prevent the creation of a DLL (because we're creating a meta-package) -->
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+
+        <!-- bits for nuget -->
+        <AssemblyName>org.g14.TypedConfig</AssemblyName>
+        <RootNamespace>org.g14.TypedConfig</RootNamespace>
+        <!--  <PackageId>  defaults to assembly name so we ignore it -->
+        <Authors>Gabriel Fortin</Authors>
+        <Title>Typed Config</Title>
+        <Description>Generates classes to access the content of appsettings in a type-safe way</Description>
+        <PackageTags>configuration;appsettings;type-safety;roslyn;source-generator;code-generation;codegen</PackageTags>
+        <Copyright>Copyright (c) 2026 Gabriel Fortin</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/gabriel-fortin/typed-config</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/gabriel-fortin/typed-config</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+
+        <PackageOutputPath>../local_nuget_packages</PackageOutputPath>
+
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- put the README in the root of nuget package -->
+        <None Update="README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\TypedConfig.Analyzer\TypedConfig.Analyzer.csproj">
+            <IncludeAssets>analyzers</IncludeAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\TypedConfig.Generator\TypedConfig.Generator.csproj">
+            <IncludeAssets>analyzers</IncludeAssets>
+        </ProjectReference>
+    </ItemGroup>
+</Project>

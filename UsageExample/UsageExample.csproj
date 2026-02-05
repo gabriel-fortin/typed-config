@@ -14,11 +14,13 @@
     <!-- analyzers and generators use a special type of reference -->
     <!-- ––––––––––––––––––––––––––––––––––––––––––––––––-––––––– -->
     <ItemGroup>
-        <ProjectReference Include="..\TypedConfig.Analyzer\TypedConfig.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+<!--        <ProjectReference Include="..\TypedConfig.Analyzer\TypedConfig.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
         <!--  using ReferenceOutputAssembly="false" prevents analyzer code from being added to runtime DLLs -->
         
-        <ProjectReference Include="..\TypedConfig.Generator\TypedConfig.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+<!--        <ProjectReference Include="..\TypedConfig.Generator\TypedConfig.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
         <!--  using ReferenceOutputAssembly="false" prevents generator code from being added to runtime DLLs -->
+
+        <PackageReference Include="org.g14.TypedConfig" Version="1.0.0" />
     </ItemGroup>
 
     <!-- Use the below if you want to save the generated files to disk -->

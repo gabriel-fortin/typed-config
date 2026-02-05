@@ -4,3 +4,4 @@ bin/
 riderModule.iml
 /_ReSharper.Caches/
 .idea
+local_nuget_packages/
