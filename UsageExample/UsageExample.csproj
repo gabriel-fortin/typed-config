@@ -21,6 +21,7 @@
         <!--  using ReferenceOutputAssembly="false" prevents generator code from being added to runtime DLLs -->
 
         <PackageReference Include="org.g14.TypedConfig" Version="1.0.0" />
+        <!-- but when it's a nuget package, the package already "knows" that it contains analyzers/generators -->
     </ItemGroup>
 
     <!-- Use the below if you want to save the generated files to disk -->
