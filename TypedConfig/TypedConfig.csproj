@@ -30,8 +30,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- put the README in the root of nuget package -->
-        <None Update="README.md" Pack="true" PackagePath="/"/>
+        <None Include="..\README.md" Pack="true" PackagePath="/">
+            <Link>README.md</Link>
+        </None>
     </ItemGroup>
 
     <!-- include DLLs from sibling projects; include them in the nuget as analyzers/generators -->
@@ -41,5 +42,5 @@
         <None Include="$(OutputPath)/*.TypedConfig.Analyzer.dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
         <None Include="$(OutputPath)/*.TypedConfig.Generator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
     </ItemGroup>
-    
+
 </Project>

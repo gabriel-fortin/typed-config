@@ -1,30 +1,74 @@
-﻿# Feature Flags Tools
+﻿# Typed Config
 
-A C# source generator and analyzer toolkit for type-safe feature flags management.
+A C# source generator and analyzer for type-safe access to appsettings.
+
+## Quick start
+1) Add dependencies to the `.csproj`:
+```xml
+<ItemGroup>
+    <PackageReference Include="org.g14.TypedConfig" Version="1.0.0" />
+</ItemGroup>
+```
+
+2) Register the root of the generated classes in `Program.cs`:  
+```csharp
+builder.Services.AddTypedConfig();
+```
+
+3) Inject `TypedConfig` where needed.
 
 ## Overview
 
-This project provides a source generator that creates strongly-typed feature flag classes from your 
-`appsettings.json` configuration, along with Roslyn analyzers to enforce naming conventions and best practices.
+This project provides a source generator that creates strongly-typed classes representing entries from your 
+`appsettings.json` file, along with Roslyn analyzers to enforce naming conventions and best practices.
 
 ## Features
 
-- **Type-Safe Feature Flags**: Access your feature flags with compile-time type safety
+- **Type-Safe Configuration**: Access your configuration with compile-time type-safety
 - **Source Generator**: Automatically generates C# classes from your `appsettings.json`
-- **Roslyn Analyzers**: Enforces naming conventions for boolean values
-- **Dependency Injection Support**: Easy integration with .NET's DI container
-- **Nested Configuration**: Support for hierarchical feature flag structures
+- **Roslyn Analyzers**: Enforce naming conventions for boolean values
+- **Dependency Injection Support**: Extension method for .NET's DI container
+- **Nested Configuration**: Support for hierarchical configuration structures
 
 ## Getting Started
 
-### 1. Configure Your Feature Flags
+### 1. Add dependencies to the project file
 
-Define your feature flags in `appsettings.json`:
+If you are using the nuget package, there is just one dependency to add to your `.csproj`:
+```xml
+<ItemGroup>
+    <PackageReference Include="org.g14.TypedConfig" Version="1.0.0" />
+</ItemGroup>
+```
+That will contain both the generator and the analyzer.
+
+If you want to use project references, a slightly longer form is needed in your `.csproj` file:  
+```xml
+<ItemGroup>
+    <ProjectReference Include="..\TypedConfig.Analyzer\TypedConfig.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\TypedConfig.Generator\TypedConfig.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!--  using ReferenceOutputAssembly="false" prevents generator code from being added to runtime DLLs -->
+</ItemGroup>
+```
+(The analyzer reference can be safely omitted)
+
+### 2. Make appsettings available in the DI container
+
+Register the root of the generated classes. In `Program.cs`:
+```csharp
+builder.Services.AddTypedConfig();
+```
+That will register the generated `TypedConfig` class in the DI container. 
+That's the root of the configuration object.
+
+### 3. Add configuration
+
+Define your configuration in `appsettings.json` as usual. For example:
 
 ```json
 {
-  "FeatureFlags": {
-    "HasTestBool": true,
+  "Flags": {
+    "TestBool": true,
     "IncomeSupport": {
       "IsEnabled": true,
       "MagicNumber": 42,
@@ -45,58 +89,72 @@ Define your feature flags in `appsettings.json`:
 }
 ```
 
-### 2. Register Feature Flags with DI
+### 4. Use Your Configuration
 
-In your `Program.cs`:
-
-```csharp
-builder.Services.AddGeneratedFeatureFlags();
-```
-
-### 3. Use Your Feature Flags
-
-Access your feature flags with full type safety:
+Access your configuration with full type safety by injecting the root type for your appsettings:
 
 ```csharp
-FlagsRootType features = InjectedInConstructor();
-
-// Simple boolean flags
-bool isTest = features.HasTestBool;
-
-// Nested feature flags with properties
-if (features.IncomeSupport.IsEnabled)
+public class ExampleClass(
+    TypedConfig config  // injected appsettings
+)
 {
-    int magicNumber = features.IncomeSupport.MagicNumber;
-    
-    if (features.IncomeSupport.Page8.IsEnabled)
+    public void ExampleMethod()
     {
-        // Do something
-    }
-}
-
-// Array configurations
-if (features.TwoWayMessaging.IsEnabled)
-{
-    foreach (RefreshIntervalsItemType interval in features.TwoWayMessaging.RefreshIntervals)
-    {
-        Console.WriteLine($"{interval.Interval}s, {interval.Repeats} times");
+        // Simple boolean values
+        bool isTest = config.Flags.TestBool; // analyzer reports naming convention violation
+        
+        // Nested configuration
+        if (config.Flags.IncomeSupport.IsEnabled)
+        {
+            int magicNumber = config.Flags.IncomeSupport.MagicNumber;
+            
+            if (config.Flags.IncomeSupport.Page8.IsEnabled)
+            {
+                // Do something
+            }
+        }
+        
+        // Arrays
+        if (config.Flags.TwoWayMessaging.IsEnabled)
+        {
+            foreach (RefreshIntervalsItemType interval in config.Flags.TwoWayMessaging.RefreshIntervals)
+            {
+                Console.WriteLine($"{interval.Interval}s, {interval.Repeats} times");
+            }
+        }
     }
 }
 ```
 
 ## Conventions
 
-### For Consumers
+You do you babe but I recommend the following conventions.
 
-**Feature Flag Objects vs Boolean Values**
+### Keep boolean flags separate
 
-When defining a feature flag in your project, follow this convention:
+Keep binary switches (flags) in a section named `Flags`, in your appsettings.  
+For example:
+```json
+{
+  "SomeOtherSettings": { ... },
+  "Flags": {
+    "RemoteCalls": {
+      "AllowCaching": true,
+      "UsePooledConnections": false
+    }
+  }
+}
+```
+
+### Configuration Objects vs Boolean Values
+
+When defining a feature flag or toggle-able setting in your configuration, follow this convention:
 
 - ❌ **Don't** create a boolean value directly for a feature:
   ```json
   {
-    "FeatureFlags": {
-      "Bagels": true  // Wrong!
+    "Flags": {
+      "NewFeature": true  // Wrong!
     }
   }
   ```
@@ -104,8 +162,8 @@ When defining a feature flag in your project, follow this convention:
 - ✅ **Do** create an object with a nested `IsEnabled` boolean:
   ```json
   {
-    "FeatureFlags": {
-      "Bagels": {
+    "Flags": {
+      "NewFeature": {
         "IsEnabled": true  // Correct!
       }
     }
@@ -114,16 +172,9 @@ When defining a feature flag in your project, follow this convention:
 
 This convention allows you to easily extend features with additional configuration properties later.
 
-### For Generator Code
-
-Internal code conventions used in the generator:
-
-- **`create` or `get`**: Methods that perform local operations without side effects
-- **`generate`**: Methods that add source code to the compilation pipeline
-
 ### Boolean Naming Convention
 
-The included Roslyn analyzer automatically checks your `appsettings.json` file and enforces that boolean values within the `FeatureFlags` section follow naming conventions, starting with prefixes like:
+The included Roslyn analyzer automatically checks your `appsettings.json` file and enforces that boolean values within the `Flags` section follow naming conventions, starting with prefixes like:
 
 - `Is...` (e.g., `IsEnabled`)
 - `Was...`
@@ -136,6 +187,13 @@ The included Roslyn analyzer automatically checks your `appsettings.json` file a
 
 This helps maintain consistency and readability across your configuration.
 
+## Internal code conventions in this repository
+
+Internal code conventions used in the generator:
+
+- **`create` or `get`**: Methods that perform local operations without side effects
+- **`generate`**: Methods that add source code to the compilation pipeline
+
 ## Limitations
 
 ### Current Limitations
@@ -145,8 +203,8 @@ This helps maintain consistency and readability across your configuration.
 ## Project Structure
 
 - **FeatureFlags**: (obsolete) Previous string-based, untyped implementation of feature flags
-- **FeatureFlags.Analyzer**: Roslyn analyzer for enforcing naming conventions
-- **FeatureFlags.Generation**: Source generator for creating type-safe feature flag classes
-- **FeatureFlags.Generation.Tests**: Test suite for the generator
+- **TypedConfig.Analyzer**: Roslyn analyzer for enforcing naming conventions
+- **TypedConfig.Generator**: Source generator for creating type-safe configuration classes
+- **TypedConfig.Generator.Tests**: Test suite for the generator
 - **UsageExample**: Example project demonstrating usage
 
