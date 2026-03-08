@@ -8,11 +8,11 @@ using NUnit.Framework;
 namespace org.g14.TypedConfig.Generator.Tests;
 
 /// <summary>
-/// Tests for FeatureFlagTypesGenerator class which generates types based on appsettings JSON structure
+/// Tests for <see cref="TypedConfigTypesGenerator"/> class which generates types based on appsettings JSON structure
 /// Tests use the Roslyn GeneratorDriver to properly test source generation
 /// </summary>
 [TestFixture]
-public class FeatureFlagTypesGeneratorIntegrationTests
+public class TypedConfigTypesGeneratorTests
 {
     #region Helper Methods
 
@@ -71,7 +71,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
 
         // Assert
         Assert.That(result.Diagnostics, Has.Length.EqualTo(1));
-        Assert.That(result.Diagnostics[0].Id, Is.EqualTo("FLAGS_002"));
+        Assert.That(result.Diagnostics[0].Id, Is.EqualTo("TYPEDCONFIG_002"));
         Assert.That(result.Diagnostics[0].Severity, Is.EqualTo(DiagnosticSeverity.Error));
     }
 
@@ -100,7 +100,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "EmptyList": []
             }
         }
@@ -122,7 +122,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "StringValue": "text",
                 "NumberValue": 42,
                 "TrueValue": true,
@@ -151,7 +151,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "Database": {
                     "ConnectionTimeout": 30,
                     "EnableRetry": true
@@ -178,7 +178,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "AllowedHosts": ["localhost", "example.com"],
                 "Ports": [80, 443, 8080]
             }
@@ -202,7 +202,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "Endpoints": [
                     {
                         "Name": "API",
@@ -232,7 +232,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "Features": {
                     "Authentication": {
                         "Enabled": true,
@@ -273,7 +273,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "Level1": {
                     "Level2": {
                         "Level3": {
@@ -306,7 +306,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "Matrix": [[1, 2], [3, 4]]
             }
         }
@@ -328,7 +328,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
         // Arrange
         var jsonContent = """
         {
-            "FeatureFlags": {
+            "Flags": {
                 "StringArray": ["a", "b", "c"],
                 "NumberArray": [1, 2, 3],
                 "BoolArray": [true, false, true]
@@ -360,7 +360,7 @@ public class FeatureFlagTypesGeneratorIntegrationTests
                     "Microsoft.Hosting.Lifetime": "Information"
                 }
             },
-            "FeatureFlags": {
+            "Flags": {
                 "StringValue": "text",
                 "NumberValue": 42,
                 "BoolValue": true,

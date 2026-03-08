@@ -49,10 +49,10 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
             using JsonDocument document = JsonDocument.Parse(jsonText);
             JsonElement root = document.RootElement;
 
-            // Look for the FeatureFlags node
-            if (root.TryGetProperty("FeatureFlags", out JsonElement featureFlagsNode))
+            // Look for the "Flags" node
+            if (root.TryGetProperty("Flags", out JsonElement flagsNode))
             {
-                AnalyzeJsonNode(context, featureFlagsNode, sourceText);
+                AnalyzeJsonNode(context, flagsNode, sourceText);
             }
         }
         catch (JsonException)

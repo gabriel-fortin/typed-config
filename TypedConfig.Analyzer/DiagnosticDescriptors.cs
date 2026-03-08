@@ -3,7 +3,7 @@
 namespace org.g14.TypedConfig.Analyzer;
 
 /// <summary>
-/// Contains diagnostic descriptors for the FeatureFlags analyzer.
+/// Contains diagnostic descriptors for the TypedConfig analyzer.
 /// </summary>
 internal static class DiagnosticDescriptors
 {
@@ -14,7 +14,7 @@ internal static class DiagnosticDescriptors
     /// Boolean values should start with prefixes like "is", "has", "can", "should", etc.
     /// </summary>
     public static readonly DiagnosticDescriptor BooleanNamingConvention = new(
-        id: "FLAGS_A_001",
+        id: "TYPEDCONFIG_A_001",
         title: "Boolean configuration value should follow naming conventions",
         messageFormat: "Boolean configuration value '{0}' should start with 'is', 'has', 'can'," +
         " 'must', 'should', 'allow', 'enable', 'use', or similar prefix",

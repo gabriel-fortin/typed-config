@@ -202,7 +202,6 @@ Internal code conventions used in the generator:
 
 ## Project Structure
 
-- **FeatureFlags**: (obsolete) Previous string-based, untyped implementation of feature flags
 - **TypedConfig.Analyzer**: Roslyn analyzer for enforcing naming conventions
 - **TypedConfig.Generator**: Source generator for creating type-safe configuration classes
 - **TypedConfig.Generator.Tests**: Test suite for the generator

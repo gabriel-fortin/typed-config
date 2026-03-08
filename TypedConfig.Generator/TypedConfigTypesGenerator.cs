@@ -10,7 +10,7 @@ using org.g14.TypedConfig.Generator.JsonParsing.Models;
 
 namespace org.g14.TypedConfig.Generator;
 
-public class FeatureFlagTypesGenerator(
+public class TypedConfigTypesGenerator(
     string baseNamespace,
     SourceProductionContext ctx)
 {
@@ -27,7 +27,7 @@ public class FeatureFlagTypesGenerator(
     // private readonly ISourceCodeCreator code = new SimpleSourceCodeCreator(baseNamespace, ctx.CancellationToken);
 
     /// <summary>
-    /// Reads the structure of feature flags from appsettings
+    /// Reads the structure of appsettings
     /// and generates classes to match that structure
     /// </summary>
     public void ScanAppsettingsAndGenerateMatchingSourceFiles(ImmutableArray<AdditionalText> appsettingsFiles)
@@ -42,7 +42,7 @@ public class FeatureFlagTypesGenerator(
             return;
         }
 
-        if (!TryReadFeatureFlagsStructureFromAppsettings(appsettingsFiles,
+        if (!TryReadAppsettingsFileStructure(appsettingsFiles,
                 out JsonType? parsedStructure, out Diagnostic? diagnostic2))
         {
             ctx.ReportDiagnostic(diagnostic2);
@@ -62,7 +62,7 @@ public class FeatureFlagTypesGenerator(
         code.GetServiceCollectionExtensionMethod(ROOT_CLASS_NAME).WriteTo(ctx);
     }
 
-    private bool TryReadFeatureFlagsStructureFromAppsettings(
+    private bool TryReadAppsettingsFileStructure(
         ImmutableArray<AdditionalText> appsettingsFiles,
         [NotNullWhen(true)] out JsonType? parsedStructure,
         [NotNullWhen(false)] out Diagnostic? diagnostic)

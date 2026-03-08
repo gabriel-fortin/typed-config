@@ -26,7 +26,7 @@ public class IncrementalGenerator : IIncrementalGenerator
             action: (sourceProductionContext, input) =>
             {
                 // the core logic is hidden in these lines
-                var generator = new FeatureFlagTypesGenerator(
+                var generator = new TypedConfigTypesGenerator(
                     baseNamespace: input.Right,
                     ctx: sourceProductionContext);
                 generator.GenerateServiceCollectionExtensionMethod();

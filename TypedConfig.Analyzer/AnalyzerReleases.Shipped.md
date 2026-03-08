@@ -8,4 +8,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-FLAGS_A_001 | Naming | Warning | Boolean value should have a prefix like 'is', 'has', 'can', or 'should'
+TYPEDCONFIG_A_001 | Naming | Warning | Boolean value should have a prefix like 'is', 'has', 'can', or 'should'
