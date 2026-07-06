@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+﻿using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using org.g14.TypedConfig.Generator.JsonParsing;
 using org.g14.TypedConfig.Generator.JsonParsing.Models;
@@ -25,75 +25,70 @@ public class JsonStructureParserTests
     public void Parse_WithStringValue_ReturnsPrimitiveStringType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse(@"""hello world""");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse(@"""hello world""");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType primitive = (JsonPrimitiveType)result;
-        Assert.That(primitive.Kind, Is.EqualTo(JsonValueKind.String));
+        Assert.That(primitive.Kind, Is.EqualTo(JTokenType.String));
     }
 
     [Test]
     public void Parse_WithNumberValue_ReturnsPrimitiveNumberType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse("42");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse("42");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType primitive = (JsonPrimitiveType)result;
-        Assert.That(primitive.Kind, Is.EqualTo(JsonValueKind.Number));
+        Assert.That(primitive.Kind, Is.EqualTo(JTokenType.Integer));
     }
 
     [Test]
-    public void Parse_WithTrueValue_ReturnsPrimitiveTrueType()
+    public void Parse_WithTrueValue_ReturnsPrimitiveBooleanType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse("true");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse("true");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType primitive = (JsonPrimitiveType)result;
-        Assert.That(primitive.Kind, Is.EqualTo(JsonValueKind.True));
+        Assert.That(primitive.Kind, Is.EqualTo(JTokenType.Boolean));
     }
 
     [Test]
-    public void Parse_WithFalseValue_ReturnsPrimitiveFalseType()
+    public void Parse_WithFalseValue_ReturnsPrimitiveBooleanType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse("false");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse("false");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType primitive = (JsonPrimitiveType)result;
-        Assert.That(primitive.Kind, Is.EqualTo(JsonValueKind.False));
+        Assert.That(primitive.Kind, Is.EqualTo(JTokenType.Boolean));
     }
 
     [Test]
     public void Parse_WithEmptyObject_ReturnsObjectTypeWithNoProperties()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse("{}");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse("{}");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonObjectType>());
@@ -102,14 +97,13 @@ public class JsonStructureParserTests
     }
 
     [Test]
-    public void Parse_WithObjectWithSingleProperty_ReturnsObjectTypeWithOneProperty()
+    public void Parse_WithObjectSingleProperty_ReturnsObjectTypeWithOneProperty()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse(@"{""name"": ""John""}");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse(@"{""name"": ""John""}");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonObjectType>());
@@ -118,18 +112,17 @@ public class JsonStructureParserTests
         Assert.That(obj.Properties.ContainsKey("name"), Is.True);
         Assert.That(obj.Properties["name"], Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType nameProp = (JsonPrimitiveType)obj.Properties["name"];
-        Assert.That(nameProp.Kind, Is.EqualTo(JsonValueKind.String));
+        Assert.That(nameProp.Kind, Is.EqualTo(JTokenType.String));
     }
 
     [Test]
-    public void Parse_WithObjectWithMultipleProperties_ReturnsObjectTypeWithAllProperties()
+    public void Parse_WithObjectMultipleProperties_ReturnsObjectTypeWithMultipleProperties()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse(@"{""name"": ""John"", ""age"": 30, ""active"": true}");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse(@"{""name"": ""John"", ""age"": 30, ""active"": true}");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonObjectType>());
@@ -138,80 +131,76 @@ public class JsonStructureParserTests
         
         Assert.That(obj.Properties.ContainsKey("name"), Is.True);
         Assert.That(obj.Properties["name"], Is.InstanceOf<JsonPrimitiveType>());
-        Assert.That(((JsonPrimitiveType)obj.Properties["name"]).Kind, Is.EqualTo(JsonValueKind.String));
+        Assert.That(((JsonPrimitiveType)obj.Properties["name"]).Kind, Is.EqualTo(JTokenType.String));
         
         Assert.That(obj.Properties.ContainsKey("age"), Is.True);
         Assert.That(obj.Properties["age"], Is.InstanceOf<JsonPrimitiveType>());
-        Assert.That(((JsonPrimitiveType)obj.Properties["age"]).Kind, Is.EqualTo(JsonValueKind.Number));
+        Assert.That(((JsonPrimitiveType)obj.Properties["age"]).Kind, Is.EqualTo(JTokenType.Integer));
         
         Assert.That(obj.Properties.ContainsKey("active"), Is.True);
         Assert.That(obj.Properties["active"], Is.InstanceOf<JsonPrimitiveType>());
-        Assert.That(((JsonPrimitiveType)obj.Properties["active"]).Kind, Is.EqualTo(JsonValueKind.True));
+        Assert.That(((JsonPrimitiveType)obj.Properties["active"]).Kind, Is.EqualTo(JTokenType.Boolean));
     }
 
     [Test]
     public void Parse_WithEmptyArray_ReturnsArrayTypeWithUndefinedItemType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse("[]");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse("[]");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonArrayType>());
         JsonArrayType arr = (JsonArrayType)result;
         Assert.That(arr.ItemType, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType itemType = (JsonPrimitiveType)arr.ItemType;
-        Assert.That(itemType.Kind, Is.EqualTo(JsonValueKind.Undefined));
+        Assert.That(itemType.Kind, Is.EqualTo(JTokenType.Undefined));
     }
 
     [Test]
     public void Parse_WithArrayOfNumbers_ReturnsArrayTypeWithNumberItemType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse("[1, 2, 3]");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse("[1, 2, 3]");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonArrayType>());
         JsonArrayType arr = (JsonArrayType)result;
         Assert.That(arr.ItemType, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType itemType = (JsonPrimitiveType)arr.ItemType;
-        Assert.That(itemType.Kind, Is.EqualTo(JsonValueKind.Number));
+        Assert.That(itemType.Kind, Is.EqualTo(JTokenType.Integer));
     }
 
     [Test]
     public void Parse_WithArrayOfStrings_ReturnsArrayTypeWithStringItemType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse(@"[""a"", ""b"", ""c""]");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse(@"[""a"", ""b"", ""c""]");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonArrayType>());
         JsonArrayType arr = (JsonArrayType)result;
         Assert.That(arr.ItemType, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType itemType = (JsonPrimitiveType)arr.ItemType;
-        Assert.That(itemType.Kind, Is.EqualTo(JsonValueKind.String));
+        Assert.That(itemType.Kind, Is.EqualTo(JTokenType.String));
     }
 
     [Test]
     public void Parse_WithArrayOfObjects_ReturnsArrayTypeWithObjectItemType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse(@"[{""id"": 1}, {""id"": 2}]");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse(@"[{""id"": 1}, {""id"": 2}]");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonArrayType>());
@@ -226,11 +215,10 @@ public class JsonStructureParserTests
     public void Parse_WithArrayOfArrays_ReturnsNestedArrayType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse("[[1, 2], [3, 4]]");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse("[[1, 2], [3, 4]]");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonArrayType>());
@@ -239,18 +227,17 @@ public class JsonStructureParserTests
         JsonArrayType innerArr = (JsonArrayType)outerArr.ItemType;
         Assert.That(innerArr.ItemType, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType primitiveType = (JsonPrimitiveType)innerArr.ItemType;
-        Assert.That(primitiveType.Kind, Is.EqualTo(JsonValueKind.Number));
+        Assert.That(primitiveType.Kind, Is.EqualTo(JTokenType.Integer));
     }
 
     [Test]
     public void Parse_WithArrayOfEmptyArrays_ReturnsNestedArrayWithUndefinedInnerType()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse("[[], []]");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse("[[], []]");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonArrayType>());
@@ -259,18 +246,17 @@ public class JsonStructureParserTests
         JsonArrayType innerArr = (JsonArrayType)outerArr.ItemType;
         Assert.That(innerArr.ItemType, Is.InstanceOf<JsonPrimitiveType>());
         JsonPrimitiveType primitiveType = (JsonPrimitiveType)innerArr.ItemType;
-        Assert.That(primitiveType.Kind, Is.EqualTo(JsonValueKind.Undefined));
+        Assert.That(primitiveType.Kind, Is.EqualTo(JTokenType.Undefined));
     }
 
     [Test]
     public void Parse_WithNestedObjects_ReturnsObjectTypeWithNestedObjectProperty()
     {
         // Arrange
-        JsonDocument jsonDoc = JsonDocument.Parse(@"{""user"": {""name"": ""John"", ""age"": 30}}");
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse(@"{""user"": {""name"": ""John"", ""age"": 30}}");
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonObjectType>());
@@ -298,11 +284,10 @@ public class JsonStructureParserTests
                 ]
             }
         }";
-        JsonDocument jsonDoc = JsonDocument.Parse(json);
-        JsonElement element = jsonDoc.RootElement;
+        JToken token = JToken.Parse(json);
 
         // Act
-        JsonType result = JsonStructureParser.Parse(element);
+        JsonType result = JsonStructureParser.Parse(token);
 
         // Assert
         Assert.That(result, Is.InstanceOf<JsonObjectType>());

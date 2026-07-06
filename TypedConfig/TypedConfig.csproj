@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
 
         <!-- bits for nuget -->
         <Version>0.69.0</Version>
@@ -37,10 +37,14 @@
 
     <!-- include DLLs from sibling projects; include them in the nuget as analyzers/generators -->
     <ItemGroup>
-        <ProjectReference Include="../TypedConfig.Analyzer/TypedConfig.Analyzer.csproj" PrivateAssets="All" />
-        <ProjectReference Include="../TypedConfig.Generator/TypedConfig.Generator.csproj" PrivateAssets="All" />
-        <None Include="$(OutputPath)/*.TypedConfig.Analyzer.dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
-        <None Include="$(OutputPath)/*.TypedConfig.Generator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
+        <ProjectReference Include="../TypedConfig.Analyzer/TypedConfig.Analyzer.csproj" PrivateAssets="all" />
+        <ProjectReference Include="../TypedConfig.Generator/TypedConfig.Generator.csproj" PrivateAssets="all" />
+        <None Include="$(OutputPath)/*.TypedConfig.Analyzer.*" Pack="true" PackagePath="analyzers/dotnet/cs" />
+        <None Include="$(OutputPath)/*.TypedConfig.Generator.*" Pack="true" PackagePath="analyzers/dotnet/cs" />
+        <!-- Include Newtonsoft.Json for source generators -->
+<!--        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" PrivateAssets="all" />-->
+<!--        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" />-->
+<!--        <None Include="$(PkgNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" />-->
     </ItemGroup>
 
 </Project>

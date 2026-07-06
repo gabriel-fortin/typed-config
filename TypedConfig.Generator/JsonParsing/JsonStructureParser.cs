@@ -1,44 +1,44 @@
-﻿using System.Text.Json;
+﻿using Newtonsoft.Json.Linq;
 using org.g14.TypedConfig.Generator.JsonParsing.Models;
 
 namespace org.g14.TypedConfig.Generator.JsonParsing;
 
 public static class JsonStructureParser
 {
-    public static JsonType Parse(JsonElement element)
+    public static JsonType Parse(JToken token)
     {
-        return element.ValueKind switch
+        return token.Type switch
         {
-            JsonValueKind.Object => ParseObject(element),
-            JsonValueKind.Array => ParseArray(element),
-            _ => new JsonPrimitiveType(element.ValueKind)
+            JTokenType.Object => ParseObject((JObject)token),
+            JTokenType.Array => ParseArray((JArray)token),
+            _ => new JsonPrimitiveType(token.Type)
         };
     }
 
-    private static JsonObjectType ParseObject(JsonElement element)
+    private static JsonObjectType ParseObject(JObject obj)
     {
-        var obj = new JsonObjectType();
+        var result = new JsonObjectType();
 
-        foreach (var prop in element.EnumerateObject())
+        foreach (var prop in obj.Properties())
         {
-            obj.Properties[prop.Name] = Parse(prop.Value);
+            result.Properties[prop.Name] = Parse(prop.Value);
         }
 
-        return obj;
+        return result;
     }
 
-    private static JsonArrayType ParseArray(JsonElement element)
+    private static JsonArrayType ParseArray(JArray array)
     {
         var arr = new JsonArrayType();
 
         // If empty, treat as "array of any"
-        if (element.GetArrayLength() == 0)
+        if (!array.Any())
         {
-            arr.ItemType = new JsonPrimitiveType(JsonValueKind.Undefined);
+            arr.ItemType = new JsonPrimitiveType(JTokenType.Undefined);
             return arr;
         }
 
-        JsonType sampledType = Parse(element.EnumerateArray().First());
+        JsonType sampledType = Parse(array.First());
         arr.ItemType = sampledType;
         return arr;
     }

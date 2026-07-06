@@ -26,8 +26,8 @@ public static class DiagnosticDescriptors
 
     public static readonly DiagnosticDescriptor CannotReadFile = new(
         id: "TYPEDCONFIG_003",
-        title: "File cannot be read",
-        messageFormat: "Typed config: cannot read appsettings file: '{FileName}'",
+        title: "File cannot be read or parsed",
+        messageFormat: "Typed config: cannot read or parse appsettings file: '{FileName}'",
         category: INPUT_FILES_CATEGORY,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

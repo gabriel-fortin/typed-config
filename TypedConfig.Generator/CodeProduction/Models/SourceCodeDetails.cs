@@ -7,7 +7,7 @@ namespace org.g14.TypedConfig.Generator.CodeProduction.Models;
 /// </summary>
 /// <param name="FileName">the proposed file name</param>
 /// <param name="SourceCodeText">the source code text to put in the file</param>
-public readonly record struct SourceCodeDetails(
+public record struct SourceCodeDetails(
     string FileName,
     string SourceCodeText)
 {
