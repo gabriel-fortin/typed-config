@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -46,5 +46,8 @@
 <!--        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" />-->
 <!--        <None Include="$(PkgNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" />-->
     </ItemGroup>
+
+    <!-- Ensure DLLs from dependant projects are created before packing; otherwise we might pack nothing -->
+    <Target Name="EnsureDependenciesAreBuiltBeforePacking" BeforeTargets="Pack" DependsOnTargets="Build" />
 
 </Project>
