@@ -17,27 +17,19 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" PrivateAssets="all" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all"  />
-<!--        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" PrivateAssets="all" GeneratePathProperty="true" />-->
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
     </ItemGroup>
-
-    <!-- Copy Newtonsoft.Json DLL to output directory so source generator can load it (depends on GeneratePathProperty) -->
-<!--    <Target Name="CopyNewtonsoftJson" AfterTargets="Build">-->
-<!--        <Copy SourceFiles="$(PkgNewtonsoft_Json)\lib\netstandard2.0\Newtonsoft.Json.dll" -->
-<!--              DestinationFolder="$(OutputPath)" -->
-<!--              SkipUnchangedFiles="true" />-->
-<!--    </Target>-->
 
     <PropertyGroup>
         <!-- Not including symbols, we'll use sourcelink instead -->
         <IncludeSymbols>false</IncludeSymbols>
-        <!--        <SymbolPackageFormat>snupkg</SymbolPackageFormat>-->
+        <!--<SymbolPackageFormat>snupkg</SymbolPackageFormat>-->
     </PropertyGroup>
 
-<!--  I'm not sure if the AnalyzerReleases files need to be specified here  -->
-<!--    <ItemGroup>-->
-<!--      <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />-->
-<!--      <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />-->
-<!--    </ItemGroup>-->
+    <!--  I'm not sure if the AnalyzerReleases files need to be specified here  -->
+    <!-- <ItemGroup>-->
+    <!--   <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />-->
+    <!--   <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />-->
+    <!-- </ItemGroup>-->
 
 </Project>
