@@ -108,10 +108,10 @@ public class EfficientSourceCodeCreator(
         code.AppendLine(Const.GeneratedCodeAttribute);
         code.AppendLine("public static class ServiceCollectionExtensions");
         code.AppendLine("{");
-        code.Append("    public static IServiceCollection")
+        code.Append("    public static void")
             .AppendLine(" AddTypedConfig(this IServiceCollection services)");
         code.AppendLine("    {");
-        code.Append("        return services.AddSingleton<").Append(className).AppendLine(">(services =>");
+        code.Append("        services.AddSingleton<").Append(className).AppendLine(">(services =>");
         code.AppendLine("        {");
         code.AppendLine("            IConfiguration configuration = services.GetRequiredService<IConfiguration>();");
         code.Append("            return configuration.Get<").Append(className).AppendLine(">();");

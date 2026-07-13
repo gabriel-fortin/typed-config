@@ -383,9 +383,9 @@ public class EfficientSourceCodeCreatorTests
             [System.CodeDom.Compiler.GeneratedCode("org.g14.TypedConfig.Generator", "{{CurrentGeneratorVersion}}")]
             public static class ServiceCollectionExtensions
             {
-                public static IServiceCollection AddTypedConfig(this IServiceCollection services)
+                public static void AddTypedConfig(this IServiceCollection services)
                 {
-                    return services.AddSingleton<FlagsRootType>(services =>
+                    services.AddSingleton<FlagsRootType>(services =>
                     {
                         IConfiguration configuration = services.GetRequiredService<IConfiguration>();
                         return configuration.Get<FlagsRootType>();
