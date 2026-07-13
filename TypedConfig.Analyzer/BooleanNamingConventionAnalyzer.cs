@@ -1,9 +1,10 @@
 ﻿using System.Collections.Immutable;
-using System.Text.Json;
+using Newtonsoft.Json.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Text;
+using Newtonsoft.Json;
 
 namespace org.g14.TypedConfig.Analyzer;
 
@@ -45,14 +46,13 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
 
         try
         {
-            var jsonText = sourceText.ToString();
-            using JsonDocument document = JsonDocument.Parse(jsonText);
-            JsonElement root = document.RootElement;
+            string jsonText = sourceText.ToString();
+            JToken root = JToken.Parse(jsonText);
 
-            // Look for the FeatureFlags node
-            if (root.TryGetProperty("FeatureFlags", out JsonElement featureFlagsNode))
+            // Look for the "Flags" node
+            if (root["Flags"] is JToken flagsNode)
             {
-                AnalyzeJsonNode(context, featureFlagsNode, sourceText);
+                AnalyzeJsonNode(context, flagsNode, sourceText);
             }
         }
         catch (JsonException)
@@ -63,19 +63,19 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeJsonNode(
         AdditionalFileAnalysisContext context,
-        JsonElement element,
+        JToken jsonNode,
         SourceText sourceText)
     {
-        if (element.ValueKind != JsonValueKind.Object) return;
+        if (jsonNode.Type != JTokenType.Object) return;
 
-        foreach (JsonProperty property in element.EnumerateObject())
+        foreach (JProperty property in ((JObject)jsonNode).Properties())
         {
             string propertyName = property.Name;
 
-            switch (property.Value.ValueKind)
+            switch (property.Value.Type)
             {
                 // If this property is a boolean value
-                case JsonValueKind.True or JsonValueKind.False:
+                case JTokenType.Boolean:
                     // If the property name follows naming conventions
                     if (!StartsWithValidBooleanPrefix(propertyName))
                     {
@@ -90,7 +90,7 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
                     }
 
                     break;
-                case JsonValueKind.Object:
+                case JTokenType.Object:
                     // Recursively analyze nested objects
                     AnalyzeJsonNode(context, property.Value, sourceText);
                     break;

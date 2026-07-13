@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>netstandard2.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>14</LangVersion>
         <AssemblyName>org.g14.TypedConfig.Generator</AssemblyName>
         <RootNamespace>org.g14.TypedConfig.Generator</RootNamespace>
-        <Version>0.1.0</Version>
-        
+
         <!-- prevent shooting ourselves in the foot; see https://stackoverflow.com/a/75767670/1387378 -->
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 
@@ -17,12 +17,19 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" PrivateAssets="all" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4" PrivateAssets="all" />
     </ItemGroup>
 
-<!--  I'm not sure if the AnalyzerReleases files need to be specified here  -->
-<!--    <ItemGroup>-->
-<!--      <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />-->
-<!--      <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />-->
-<!--    </ItemGroup>-->
+    <PropertyGroup>
+        <!-- Not including symbols, we'll use sourcelink instead -->
+        <IncludeSymbols>false</IncludeSymbols>
+        <!--<SymbolPackageFormat>snupkg</SymbolPackageFormat>-->
+    </PropertyGroup>
+
+    <!--  I'm not sure if the AnalyzerReleases files need to be specified here  -->
+    <!-- <ItemGroup>-->
+    <!--   <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />-->
+    <!--   <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />-->
+    <!-- </ItemGroup>-->
 
 </Project>

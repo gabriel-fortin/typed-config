@@ -1,8 +1,8 @@
 ﻿using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Text.Json;
+using Newtonsoft.Json.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Newtonsoft.Json;
 using org.g14.TypedConfig.Generator.CodeProduction;
 using org.g14.TypedConfig.Generator.CodeProduction.Models;
 using org.g14.TypedConfig.Generator.JsonParsing;
@@ -10,15 +10,10 @@ using org.g14.TypedConfig.Generator.JsonParsing.Models;
 
 namespace org.g14.TypedConfig.Generator;
 
-public class FeatureFlagTypesGenerator(
+public class TypedConfigTypesGenerator(
     string baseNamespace,
     SourceProductionContext ctx)
 {
-    private static readonly JsonDocumentOptions ParsingOptions = new ()
-    {
-        AllowTrailingCommas = true,
-        CommentHandling = JsonCommentHandling.Skip,
-    };
 
     private const string ROOT_CLASS_NAME = "TypedConfig";
     private const string UNDEFINED_CLASS_NAME = "Undefined";
@@ -27,7 +22,7 @@ public class FeatureFlagTypesGenerator(
     // private readonly ISourceCodeCreator code = new SimpleSourceCodeCreator(baseNamespace, ctx.CancellationToken);
 
     /// <summary>
-    /// Reads the structure of feature flags from appsettings
+    /// Reads the structure of appsettings
     /// and generates classes to match that structure
     /// </summary>
     public void ScanAppsettingsAndGenerateMatchingSourceFiles(ImmutableArray<AdditionalText> appsettingsFiles)
@@ -42,7 +37,7 @@ public class FeatureFlagTypesGenerator(
             return;
         }
 
-        if (!TryReadFeatureFlagsStructureFromAppsettings(appsettingsFiles,
+        if (!TryReadAppsettingsFileStructure(appsettingsFiles,
                 out JsonType? parsedStructure, out Diagnostic? diagnostic2))
         {
             ctx.ReportDiagnostic(diagnostic2);
@@ -62,10 +57,10 @@ public class FeatureFlagTypesGenerator(
         code.GetServiceCollectionExtensionMethod(ROOT_CLASS_NAME).WriteTo(ctx);
     }
 
-    private bool TryReadFeatureFlagsStructureFromAppsettings(
+    private bool TryReadAppsettingsFileStructure(
         ImmutableArray<AdditionalText> appsettingsFiles,
-        [NotNullWhen(true)] out JsonType? parsedStructure,
-        [NotNullWhen(false)] out Diagnostic? diagnostic)
+        out JsonType? parsedStructure,
+        out Diagnostic? diagnostic)
     {
         AdditionalText file = appsettingsFiles.First();
         SourceText? appsettingsSourceText = file.GetText(ctx.CancellationToken);
@@ -79,12 +74,24 @@ public class FeatureFlagTypesGenerator(
             return false;
         }
 
-        using JsonDocument appsettingsDoc = JsonDocument.Parse(appsettingsSourceText.ToString(), ParsingOptions);
-        ctx.CancellationToken.ThrowIfCancellationRequested();
-        parsedStructure = JsonStructureParser.Parse(appsettingsDoc.RootElement);
+        try
+        {
+            JToken jsonToken = JToken.Parse(appsettingsSourceText.ToString());
+            ctx.CancellationToken.ThrowIfCancellationRequested();
+            parsedStructure = JsonStructureParser.Parse(jsonToken);
 
-        diagnostic = null;
-        return true;
+            diagnostic = null;
+            return true;
+        }
+        catch (JsonReaderException ex)
+        {
+            parsedStructure = null;
+            diagnostic = Diagnostic.Create(
+                descriptor: DiagnosticDescriptors.CannotReadFile,
+                location: null,
+                messageArgs: [file.Path + ": " + ex.Message]);
+            return false;
+        }
     }
 
     /// <summary>
@@ -111,7 +118,8 @@ public class FeatureFlagTypesGenerator(
         // local helper function
         PropDetails GetOrGenerateTypeOfObjectProperty(KeyValuePair<string, JsonType> kvp)
         {
-            (string propName, JsonType propDetails) = kvp;
+            string propName = kvp.Key;
+            JsonType propDetails = kvp.Value;
 
             PartialPropDetails partialResult = propDetails switch
             {
@@ -153,16 +161,16 @@ public class FeatureFlagTypesGenerator(
     {
         return jsonStructure switch
         {
-            { Kind: JsonValueKind.String } => new(Const.StringType, RequiredNamespace: null),
-            { Kind: JsonValueKind.Number } => new(Const.IntType, RequiredNamespace: null),
-            { Kind: JsonValueKind.True } => new(Const.BoolType, RequiredNamespace: null),
-            { Kind: JsonValueKind.False } => new(Const.BoolType, RequiredNamespace: null),
+            { Kind: JTokenType.String } => new(Const.StringType, RequiredNamespace: null),
+            { Kind: JTokenType.Integer } => new(Const.IntType, RequiredNamespace: null),
+            { Kind: JTokenType.Float } => new(Const.IntType, RequiredNamespace: null),
+            { Kind: JTokenType.Boolean } => new(Const.BoolType, RequiredNamespace: null),
             _ => new(PropType: UNDEFINED_CLASS_NAME, RequiredNamespace: baseNamespace),
         };
     }
 
     private static bool IsFileCountValid(ImmutableArray<AdditionalText> files,
-        [NotNullWhen(false)] out Diagnostic? diagnostic)
+        out Diagnostic? diagnostic)
     {
         if (files.Length == 0)
         {

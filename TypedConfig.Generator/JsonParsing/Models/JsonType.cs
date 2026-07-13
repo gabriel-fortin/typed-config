@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+﻿using Newtonsoft.Json.Linq;
 
 namespace org.g14.TypedConfig.Generator.JsonParsing.Models;
 
@@ -18,9 +18,9 @@ public record JsonArrayType : JsonType
 
 public record JsonPrimitiveType : JsonType
 {
-    public JsonValueKind Kind { get; }
+    public JTokenType Kind { get; }
 
-    public JsonPrimitiveType(JsonValueKind kind)
+    public JsonPrimitiveType(JTokenType kind)
     {
         Kind = kind;
     }

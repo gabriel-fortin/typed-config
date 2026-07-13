@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <Version>1.0.0</Version>
+
+        <!-- bits for nuget -->
+        <PackageId>org.g14.TypedConfig</PackageId>
+        <Authors>Gabriel Fortin</Authors>
+        <Title>Typed Config</Title>
+        <Description>Generates classes to access the content of appsettings in a type-safe way</Description>
+        <PackageTags>configuration;appsettings;type-safety;roslyn;source-generator;code-generation;codegen</PackageTags>
+        <Copyright>Copyright (c) 2026 Gabriel Fortin</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/gabriel-fortin/typed-config</PackageProjectUrl>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+        <!-- do not include the DLL built from this project -->
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <!-- because we create a nuget package containing only analyzers/generators -->
+        <PackageType>Analyzer</PackageType>
+        <!-- the DLLs in this package are used only during dev -->
+        <IsDevelopmentDependency>true</IsDevelopmentDependency>
+
+        <!-- This project emits no DLL itself; dotnet pack warns about missing DLLs for the declared target framework -->
+        <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+        <!-- create nuget package on build -->
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageOutputPath>../generated_nuget_packages</PackageOutputPath>
+
+        <!-- where to find the README file (in the created nuget package) -->
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- put the REAMDE in the root of the created nuget package -->
+        <None Include="..\README.md" Pack="true" PackagePath="/" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- use analyzers/geenrators from sibling projects -->
+        <ProjectReference Include="../TypedConfig.Analyzer/TypedConfig.Analyzer.csproj"
+                          PrivateAssets="all" />
+        <ProjectReference Include="../TypedConfig.Generator/TypedConfig.Generator.csproj"
+                          PrivateAssets="all" />
+        <!-- dependencies of the analyzers/generators which the consumer will need -->
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4"
+                          GeneratePathProperty="true"
+                          PrivateAssets="all" />
+
+        <!-- include all of the above in the nuget as analyzer/generator files -->
+        <None Include="$(OutputPath)/org.g14.TypedConfig.Analyzer.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)/org.g14.TypedConfig.Generator.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(PkgNewtonsoft_Json)/lib/netstandard2.0/Newtonsoft.Json.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <!-- Visible=false means that the file doesn't show in the solution explorer -->
+    </ItemGroup>
+
+    <!-- ensure DLLs from dependant projects are built before we try to pack them -->
+    <Target Name="EnsureDependenciesAreBuiltBeforePacking" BeforeTargets="Pack" DependsOnTargets="Build" />
+
+</Project>

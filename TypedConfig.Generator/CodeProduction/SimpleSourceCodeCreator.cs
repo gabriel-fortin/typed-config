@@ -120,9 +120,9 @@ public class SimpleSourceCodeCreator(
               {{Const.GeneratedCodeAttribute}}
               public static class ServiceCollectionExtensions
               {
-                  public static IServiceCollection AddTypedConfig(this IServiceCollection services)
+                  public static void AddTypedConfig(this IServiceCollection services)
                   {
-                      return services.AddSingleton<{{className}}>(services =>
+                      services.AddSingleton<{{className}}>(services =>
                       {
                           IConfiguration configuration = services.GetRequiredService<IConfiguration>();
                           return configuration.Get<{{className}}>();

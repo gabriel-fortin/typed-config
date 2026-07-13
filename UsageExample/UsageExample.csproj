@@ -7,32 +7,33 @@
     </PropertyGroup>
 
     <ItemGroup>
-<!--        <ProjectReference Include="..\FeatureFlags\FeatureFlags.csproj"/>-->
-    </ItemGroup>
-
-    <!-- –––––––––––––––––––––––––––––––––––––––––––––––––––––––– -->
-    <!-- analyzers and generators use a special type of reference -->
-    <!-- ––––––––––––––––––––––––––––––––––––––––––––––––-––––––– -->
-    <ItemGroup>
-        <ProjectReference Include="..\TypedConfig.Analyzer\TypedConfig.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <!-- –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– -->
+        <!-- analyzers and generators from project references use a special type of reference -->
+        <!-- ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––-––––––– -->
+        <!-- <ProjectReference Include="..\TypedConfig.Analyzer\TypedConfig.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
         <!--  using ReferenceOutputAssembly="false" prevents analyzer code from being added to runtime DLLs -->
-        
-        <ProjectReference Include="..\TypedConfig.Generator\TypedConfig.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+
+        <!-- <ProjectReference Include="..\TypedConfig.Generator\TypedConfig.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
         <!--  using ReferenceOutputAssembly="false" prevents generator code from being added to runtime DLLs -->
+
+        <!-- –––––––––––––––––––––––––––––––––––––––––––––––––––-––––––––––––––––––––––––––––––––––––-––––––– -->
+        <!-- but when it's a nuget package, the package already "knows" that it contains analyzers/generators -->
+        <!-- ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––-––––––– -->
+        <PackageReference Include="org.g14.TypedConfig" Version="1.0.0" />
     </ItemGroup>
 
     <!-- Use the below if you want to save the generated files to disk -->
-<!--    <PropertyGroup>-->
-<!--        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>-->
-<!--        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\Generated</CompilerGeneratedFilesOutputPath>-->
-<!--    </PropertyGroup>-->
+    <!-- <PropertyGroup>-->
+    <!--     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>-->
+    <!--     <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\Generated</CompilerGeneratedFilesOutputPath>-->
+    <!-- </PropertyGroup>-->
 
     <ItemGroup>
         <!-- Make the appsettings.json file visible to the generators and analyzers -->
-        <AdditionalFiles Include="appsettings.json"/>
+        <AdditionalFiles Include="appsettings.json" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
     </ItemGroup>
 </Project>
