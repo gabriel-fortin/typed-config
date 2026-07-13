@@ -1,6 +1,6 @@
 ﻿# Typed Config
 
-A C# source generator and analyzer for type-safe access to appsettings.
+A C# source generator and analyzer for class-based (and type-safe) access to appsettings.
 
 ## Quick start
 1) Add dependencies to the `.csproj`:
@@ -19,16 +19,15 @@ builder.Services.AddTypedConfig();
 
 ## Overview
 
-This project provides a source generator that creates strongly-typed classes representing entries from your 
-`appsettings.json` file, along with Roslyn analyzers to enforce naming conventions and best practices.
+This project adds a source generator that creates strongly-typed classes representing entries from your 
+`appsettings.json` file. It contains Roslyn analyzers to enforce naming conventions and best practices.
 
 ## Features
 
-- **Type-Safe Configuration**: Access your configuration with compile-time type-safety
-- **Source Generator**: Automatically generates C# classes from your `appsettings.json`
-- **Roslyn Analyzers**: Enforce naming conventions for boolean values
-- **Dependency Injection Support**: Extension method for .NET's DI container
-- **Nested Configuration**: Support for hierarchical configuration structures
+- **Type-Safe Configuration**: Allows accessing your configuration in a type-safe way
+- **Source Generator**: Automatically generates C# classes based on your `appsettings.json`
+- **Dependency Injection Support**: Has extension method for .NET's DI container
+- **Nested Configuration**: Supports hierarchical configuration structures
 
 ## Getting Started
 
@@ -40,9 +39,10 @@ If you are using the nuget package, there is just one dependency to add to your 
     <PackageReference Include="org.g14.TypedConfig" Version="1.0.0" />
 </ItemGroup>
 ```
-That will contain both the generator and the analyzer.
+That will add both the generator and the analyzer.
 
-If you want to use project references, a slightly longer form is needed in your `.csproj` file:  
+If you want to use project references (why would you though?), 
+a slightly longer form is needed in your `.csproj` file:  
 ```xml
 <ItemGroup>
     <ProjectReference Include="..\TypedConfig.Analyzer\TypedConfig.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
@@ -59,7 +59,7 @@ Register the root of the generated classes. In `Program.cs`:
 builder.Services.AddTypedConfig();
 ```
 That will register the generated `TypedConfig` class in the DI container. 
-That's the root of the configuration object.
+That represents the root of your appsettings object.
 
 ### 3. Add configuration
 
@@ -91,7 +91,7 @@ Define your configuration in `appsettings.json` as usual. For example:
 
 ### 4. Use Your Configuration
 
-Access your configuration with full type safety by injecting the root type for your appsettings:
+Access your configuration with full type safety by injecting `TypedConfig` – the root type for your appsettings:
 
 ```csharp
 public class ExampleClass(
@@ -130,17 +130,16 @@ public class ExampleClass(
 
 You do you babe but I recommend the following conventions.
 
-### Keep boolean flags separate
+### Group by area or feature
 
-Keep binary switches (flags) in a section named `Flags`, in your appsettings.  
+Keep configuration values grouped by area or feature.
 For example:
 ```json
 {
-  "SomeOtherSettings": { ... },
-  "Flags": {
+  "PassportApplications": {
     "RemoteCalls": {
       "AllowCaching": true,
-      "UsePooledConnections": false
+      "RetryCount": 3
     }
   }
 }
@@ -153,19 +152,15 @@ When defining a feature flag or toggle-able setting in your configuration, follo
 - ❌ **Don't** create a boolean value directly for a feature:
   ```json
   {
-    "Flags": {
-      "NewFeature": true  // Wrong!
-    }
+    "EnableNewFeature": true  // Wrong!
   }
   ```
 
 - ✅ **Do** create an object with a nested `IsEnabled` boolean:
   ```json
   {
-    "Flags": {
-      "NewFeature": {
-        "IsEnabled": true  // Correct!
-      }
+    "NewFeature": {
+      "IsEnabled": true  // Correct!
     }
   }
   ```
@@ -174,7 +169,8 @@ This convention allows you to easily extend features with additional configurati
 
 ### Boolean Naming Convention
 
-The included Roslyn analyzer automatically checks your `appsettings.json` file and enforces that boolean values within the `Flags` section follow naming conventions, starting with prefixes like:
+The included Roslyn analyzer automatically checks your `appsettings.json` file and enforces that 
+boolean values within the `Flags` section follow naming conventions, starting with prefixes like:
 
 - `Is...` (e.g., `IsEnabled`)
 - `Was...`
@@ -187,6 +183,16 @@ The included Roslyn analyzer automatically checks your `appsettings.json` file a
 
 This helps maintain consistency and readability across your configuration.
 
+## Limitations
+
+### Current Limitations
+
+- **Single Configuration File**: Currently, all keys must be present in `appsettings.json`. Support for scanning other configuration files (e.g., `appsettings.Development.json`) may be added in the future.
+- **Singleton**: The appsettings content is registered as a singleton; runtime changes in configuration are not handled.
+- **only modern projects**: .NET Framework projects and projects using `packages.config` are out of scope
+
+--------------------------------------------------------------------------------
+
 ## Internal code conventions in this repository
 
 Internal code conventions used in the generator:
@@ -194,14 +200,9 @@ Internal code conventions used in the generator:
 - **`create` or `get`**: Methods that perform local operations without side effects
 - **`generate`**: Methods that add source code to the compilation pipeline
 
-## Limitations
-
-### Current Limitations
-
-- **Single Configuration File**: Currently, all keys must be present in `appsettings.json`. Support for scanning other configuration files (e.g., `appsettings.Development.json`) may be added in the future.
-
 ## Project Structure
 
+- **TypedConfig**: Empty project that builds the nuget package containing the analyzer and generator
 - **TypedConfig.Analyzer**: Roslyn analyzer for enforcing naming conventions
 - **TypedConfig.Generator**: Source generator for creating type-safe configuration classes
 - **TypedConfig.Generator.Tests**: Test suite for the generator
