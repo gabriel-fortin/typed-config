@@ -49,11 +49,7 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
             string jsonText = sourceText.ToString();
             JToken root = JToken.Parse(jsonText);
 
-            // Look for the "Flags" node
-            if (root["Flags"] is JToken flagsNode)
-            {
-                AnalyzeJsonNode(context, flagsNode, sourceText);
-            }
+            AnalyzeJsonNode(context, root, sourceText);
         }
         catch (JsonException)
         {
