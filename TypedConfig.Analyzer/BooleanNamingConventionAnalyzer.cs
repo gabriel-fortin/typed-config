@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Newtonsoft.Json.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -44,12 +44,14 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
         SourceText? sourceText = context.AdditionalFile.GetText(context.CancellationToken);
         if (sourceText == null) return;
 
+        ImmutableHashSet<string> excludedSections = GetExcludedSections(context);
+
         try
         {
             string jsonText = sourceText.ToString();
             JToken root = JToken.Parse(jsonText);
 
-            AnalyzeJsonNode(context, root, sourceText);
+            AnalyzeJsonNode(context, root, sourceText, currentPath: "", excludedSections);
         }
         catch (JsonException)
         {
@@ -57,16 +59,46 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
         }
     }
 
+    /// <summary>
+    /// Reads the <c>typed_config.excluded_sections</c> option from .editorconfig for the
+    /// appsettings file. The value is a comma-separated list of ASP.NET-style colon paths
+    /// (e.g. "Logging, Database:Advanced"); each names a section whose subtree is skipped.
+    /// </summary>
+    private static ImmutableHashSet<string> GetExcludedSections(AdditionalFileAnalysisContext context)
+    {
+        AnalyzerConfigOptions configOptions =
+            context.Options.AnalyzerConfigOptionsProvider.GetOptions(context.AdditionalFile);
+
+        if (!configOptions.TryGetValue("typed_config.excluded_sections", out string? raw))
+        {
+            return ImmutableHashSet<string>.Empty;
+        }
+
+        return raw.Split(',')
+            .Select(section => section.Trim())
+            .Where(section => section.Length > 0)
+            .ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     private static void AnalyzeJsonNode(
         AdditionalFileAnalysisContext context,
         JToken jsonNode,
-        SourceText sourceText)
+        SourceText sourceText,
+        string currentPath,
+        ImmutableHashSet<string> excludedSections)
     {
         if (jsonNode.Type != JTokenType.Object) return;
 
         foreach (JProperty property in ((JObject)jsonNode).Properties())
         {
             string propertyName = property.Name;
+
+            // Build the ASP.NET-style path (e.g. "Database:Advanced") for this property
+            string childPath = currentPath.Length == 0
+                ? propertyName
+                : currentPath + ":" + propertyName;
+
+            if (excludedSections.Contains(childPath)) continue;
 
             switch (property.Value.Type)
             {
@@ -88,7 +120,7 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
                     break;
                 case JTokenType.Object:
                     // Recursively analyze nested objects
-                    AnalyzeJsonNode(context, property.Value, sourceText);
+                    AnalyzeJsonNode(context, property.Value, sourceText, childPath, excludedSections);
                     break;
             }
         }

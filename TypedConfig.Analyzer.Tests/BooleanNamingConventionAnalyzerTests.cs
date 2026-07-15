@@ -20,7 +20,8 @@ public class BooleanNamingConventionAnalyzerTests
 
     private static async Task<ImmutableArray<Diagnostic>> RunAnalyzerAsync(
         string? sourceCode = null,
-        string? appsettingsContent = null)
+        string? appsettingsContent = null,
+        IReadOnlyDictionary<string, string>? editorConfig = null)
     {
         SyntaxTree[] syntaxTrees = sourceCode != null
             ? [CSharpSyntaxTree.ParseText(sourceCode)]
@@ -41,10 +42,14 @@ public class BooleanNamingConventionAnalyzerTests
             ? [new TestAdditionalText("appsettings.json", appsettingsContent)]
             : ImmutableArray<AdditionalText>.Empty;
 
+        AnalyzerOptions analyzerOptions = editorConfig != null
+            ? new AnalyzerOptions(additionalTexts, new TestConfigOptionsProvider(new TestConfigOptions(editorConfig)))
+            : new AnalyzerOptions(additionalTexts);
+
         var analyzer = new BooleanNamingConventionAnalyzer();
         CompilationWithAnalyzers compilationWithAnalyzers = compilation.WithAnalyzers(
             [analyzer],
-            new AnalyzerOptions(additionalTexts));
+            analyzerOptions);
 
         return await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync();
     }
@@ -56,6 +61,40 @@ public class BooleanNamingConventionAnalyzerTests
         public override string Path { get; } = path;
 
         public override SourceText? GetText(CancellationToken cancellationToken = default) => _text;
+    }
+
+    /// <summary>
+    /// Test double that surfaces a dictionary of .editorconfig key/values, using the same
+    /// case-insensitive key comparison the real editorconfig options use.
+    /// </summary>
+    private sealed class TestConfigOptions : AnalyzerConfigOptions
+    {
+        private readonly Dictionary<string, string> _values;
+
+        public TestConfigOptions(IReadOnlyDictionary<string, string> values)
+        {
+            _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, string> pair in values)
+            {
+                _values[pair.Key] = pair.Value;
+            }
+        }
+
+        public override bool TryGetValue(string key, out string value)
+        {
+            return _values.TryGetValue(key, out value!);
+        }
+
+        public override IEnumerable<string> Keys => _values.Keys;
+    }
+
+    private sealed class TestConfigOptionsProvider(AnalyzerConfigOptions options) : AnalyzerConfigOptionsProvider
+    {
+        public override AnalyzerConfigOptions GlobalOptions => options;
+
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => options;
+
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => options;
     }
 
     #endregion
@@ -199,6 +238,103 @@ public class BooleanNamingConventionAnalyzerTests
 
         // Act
         ImmutableArray<Diagnostic> diagnostics = await RunAnalyzerAsync(sourceCode: source);
+
+        // Assert
+        Assert.That(diagnostics, Is.Empty);
+    }
+
+    [Test]
+    public async Task Appsettings_WithExcludedTopLevelSection_ReportsNoDiagnostic()
+    {
+        // Arrange
+        var appsettings = """
+        {
+            "Logging": {
+                "DarkMode": true
+            }
+        }
+        """;
+        var editorConfig = new Dictionary<string, string>
+        {
+            ["typed_config.excluded_sections"] = "Logging",
+        };
+
+        // Act
+        ImmutableArray<Diagnostic> diagnostics =
+            await RunAnalyzerAsync(appsettingsContent: appsettings, editorConfig: editorConfig);
+
+        // Assert
+        Assert.That(diagnostics, Is.Empty);
+    }
+
+    [Test]
+    public async Task Appsettings_WithExcludedNestedSection_ExcludesOnlyThatSubtree()
+    {
+        // Arrange - "Database:Advanced" is excluded, but a bad boolean elsewhere still reports
+        var appsettings = """
+        {
+            "Database": {
+                "Retry": true,
+                "Advanced": {
+                    "DarkMode": true
+                }
+            }
+        }
+        """;
+        var editorConfig = new Dictionary<string, string>
+        {
+            ["typed_config.excluded_sections"] = "Database:Advanced",
+        };
+
+        // Act
+        ImmutableArray<Diagnostic> diagnostics =
+            await RunAnalyzerAsync(appsettingsContent: appsettings, editorConfig: editorConfig);
+
+        // Assert
+        Assert.That(diagnostics, Has.Length.EqualTo(1));
+        Assert.That(diagnostics[0].GetMessage(), Does.Contain("Retry"));
+        Assert.That(diagnostics[0].GetMessage(), Does.Not.Contain("DarkMode"));
+    }
+
+    [Test]
+    public async Task Appsettings_WithoutExclusionConfig_StillReports()
+    {
+        // Arrange - same JSON as the exclusion test, but no editorconfig option
+        var appsettings = """
+        {
+            "Logging": {
+                "DarkMode": true
+            }
+        }
+        """;
+
+        // Act
+        ImmutableArray<Diagnostic> diagnostics = await RunAnalyzerAsync(appsettingsContent: appsettings);
+
+        // Assert
+        Assert.That(diagnostics, Has.Length.EqualTo(1));
+        Assert.That(diagnostics[0].GetMessage(), Does.Contain("DarkMode"));
+    }
+
+    [Test]
+    public async Task Appsettings_ExcludedSectionMatchIsCaseInsensitive()
+    {
+        // Arrange - config uses lower-case "logging", JSON section is "Logging"
+        var appsettings = """
+        {
+            "Logging": {
+                "DarkMode": true
+            }
+        }
+        """;
+        var editorConfig = new Dictionary<string, string>
+        {
+            ["typed_config.excluded_sections"] = "logging",
+        };
+
+        // Act
+        ImmutableArray<Diagnostic> diagnostics =
+            await RunAnalyzerAsync(appsettingsContent: appsettings, editorConfig: editorConfig);
 
         // Assert
         Assert.That(diagnostics, Is.Empty);
