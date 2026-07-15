@@ -1,4 +1,4 @@
-﻿# Typed Config
+# Typed Config
 
 A C# source generator and analyzer for class-based (and type-safe) access to appsettings.
 
@@ -182,6 +182,21 @@ boolean values within the `Flags` section follow naming conventions, starting wi
 - `Use...`
 
 This helps maintain consistency and readability across your configuration.
+
+#### Excluding sections from the analyzer
+
+You can tell the analyzer to skip specific sections of `appsettings.json` via `.editorconfig`.
+Set `typed_config.excluded_sections` to a comma-separated list of section paths, using a colon
+(`:`) to address nested sections (the same convention as .NET configuration keys):
+
+```editorconfig
+[appsettings.json]
+typed_config.excluded_sections = Logging, Database:Advanced
+```
+
+Excluding a section skips its **entire subtree**, so no boolean inside it is checked. Matching is
+case-insensitive. This is useful for framework-owned or third-party sections whose names you don't
+control.
 
 ## Limitations
 
