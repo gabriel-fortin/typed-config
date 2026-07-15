@@ -11,6 +11,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{36D28546-DD2E-4683-8D7F-ACA53CDA7115}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
+		NUGET_PUBLISHING.md = NUGET_PUBLISHING.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypedConfig", "TypedConfig\TypedConfig.csproj", "{017D6C2E-27C1-4810-8203-9C4013FE9873}"

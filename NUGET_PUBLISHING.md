@@ -1,25 +1,28 @@
+# Publishing a new version
 
-increment version in TypedConfig.csproj
-
-
-move entries from AnalyzerReleases.Unshipped to AnalyzerReleases.Shipped in:
-- the generator project
-- the analyzer project
+This file describes steps for creating a new version of the nuget package
 
 
-pack Typed config
-do the above twice if the project was never built
+## Update code and prepare package
+
+- Move entries from AnalyzerReleases.Unshipped to AnalyzerReleases.Shipped in:
+  + the generator project
+  + the analyzer project
+- Update the <Version> node in TypedConfig.csproj
+- Update version of the TypedConfig package reference in UsageExample.csproj
+- Commit the changes (so that the generated nuget package references the right git hash)
+- Make sure you're using the Release configuration
+- Build/Pack the TypedConfig project (creates .nupkg file in ./generated_nuget_packages)
 
 
-verify the generated file
-Test 1
+## Verify the package
 - open the nupkg file (it's a zip file)
 - make sure the REAMDE is in `/`
 - make sure the generator and analyzer DLLs are in `/analyzers/dotnet/cs/` 
-Test 2
-- update the nuget reference in the UsageExample project to the version you just packed
-- build and run the project
+- make sure the Newtonsoft.Json dependency DLL is in `/analyzers/dotnet/cs/`
 
 
-
-Login to nuget.org and upload the nupkg file
+## Share with the world
+- Upload the .nupkg file to nuget.org
+- Add tag for the new version to the git repo
+- Push repo changes (including tag)
