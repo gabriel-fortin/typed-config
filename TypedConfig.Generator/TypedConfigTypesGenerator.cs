@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Newtonsoft.Json.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -55,6 +55,11 @@ public class TypedConfigTypesGenerator(
     public void GenerateServiceCollectionExtensionMethod()
     {
         code.GetServiceCollectionExtensionMethod(ROOT_CLASS_NAME).WriteTo(ctx);
+    }
+
+    public void GenerateExcludeFromBoolNamingConventionAttribute()
+    {
+        code.GetExcludeFromBoolNamingConventionAttributeClass().WriteTo(ctx);
     }
 
     private bool TryReadAppsettingsFileStructure(

@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -92,6 +92,24 @@ public class TypedConfigTypesGeneratorTests
         Assert.That(result.GeneratedTrees.Length, Is.GreaterThan(0));
         string generatedCode = GeneratedCode(result);
         Assert.That(generatedCode, Does.Contain("class TypedConfig"));
+    }
+
+    [Test]
+    public void Generator_WithEmptyAppsettings_GeneratesExcludeFromBoolNamingConventionAttribute()
+    {
+        // Arrange
+        var jsonContent = """
+        {
+        }
+        """;
+
+        // Act
+        GeneratorDriverRunResult result = RunGenerator(jsonContent);
+
+        // Assert
+        Assert.That(result.Diagnostics.Where(IsErrorSeverity), Is.Empty);
+        string generatedCode = GeneratedCode(result);
+        Assert.That(generatedCode, Does.Contain("class ExcludeFromBoolNamingConventionAttribute"));
     }
 
     [Test]

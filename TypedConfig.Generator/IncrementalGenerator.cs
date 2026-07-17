@@ -30,6 +30,7 @@ public class IncrementalGenerator : IIncrementalGenerator
                     baseNamespace: input.Right,
                     ctx: sourceProductionContext);
                 generator.GenerateServiceCollectionExtensionMethod();
+                generator.GenerateExcludeFromBoolNamingConventionAttribute();
                 generator.ScanAppsettingsAndGenerateMatchingSourceFiles(appsettingsFiles: input.Left);
             });
     }

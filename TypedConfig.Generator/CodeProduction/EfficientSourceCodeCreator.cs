@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Web;
 using org.g14.TypedConfig.Generator.CodeProduction.Models;
 
@@ -121,6 +121,28 @@ public class EfficientSourceCodeCreator(
 
         return new(
             FileName: "ServiceCollectionExtensions.generated.cs",
+            SourceCodeText: code.ToString()
+        );
+    }
+
+    public SourceCodeDetails GetExcludeFromBoolNamingConventionAttributeClass()
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        StringBuilder code = CreateCodeBuilder();
+
+        code.Append("namespace ").Append(defaultNamespace).AppendLine(";").AppendLine();
+
+        code.AppendLine("/// <summary>");
+        code.AppendLine("/// Excludes the annotated boolean property from the bool naming convention analyzer.");
+        code.AppendLine("/// </summary>");
+        code.AppendLine(Const.GeneratedCodeAttribute);
+        code.AppendLine("[System.AttributeUsage(System.AttributeTargets.Property)]");
+        code.AppendLine("public sealed class ExcludeFromBoolNamingConventionAttribute : System.Attribute");
+        code.AppendLine("{").Append("}");
+
+        return new(
+            FileName: "ExcludeFromBoolNamingConventionAttribute.generated.cs",
             SourceCodeText: code.ToString()
         );
     }
