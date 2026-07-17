@@ -32,16 +32,16 @@ public class TypedConfigTypesGenerator(
 
         if (!IsFileCountValid(appsettingsFiles, out Diagnostic? diagnostic1))
         {
-            ctx.ReportDiagnostic(diagnostic1);
-            code.GetErrorIndicatingClass(diagnostic1.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
+            ctx.ReportDiagnostic(diagnostic1!);
+            code.GetErrorIndicatingClass(diagnostic1!.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
             return;
         }
 
         if (!TryReadAppsettingsFileStructure(appsettingsFiles,
                 out JsonType? parsedStructure, out Diagnostic? diagnostic2))
         {
-            ctx.ReportDiagnostic(diagnostic2);
-            code.GetErrorIndicatingClass(diagnostic2.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
+            ctx.ReportDiagnostic(diagnostic2!);
+            code.GetErrorIndicatingClass(diagnostic2!.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
             return;
         }
 
