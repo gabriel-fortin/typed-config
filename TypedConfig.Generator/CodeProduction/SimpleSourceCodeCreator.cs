@@ -24,7 +24,8 @@ public class SimpleSourceCodeCreator(
             {
                 string type = x.PropType;
                 string name = x.PropName.ToSafeIdentifier();
-                return $"public required {type} {name} {{ get; init; }}";
+                string attribute = x.ExcludeFromBoolNamingConvention ? "[ExcludeFromBoolNamingConvention]\n    " : "";
+                return $"{attribute}public required {type} {name} {{ get; init; }}";
             });
 
         IEnumerable<string> usingStatements = propsAndTheirTypes

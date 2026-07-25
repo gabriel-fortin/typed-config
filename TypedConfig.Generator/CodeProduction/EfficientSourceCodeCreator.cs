@@ -40,6 +40,11 @@ public class EfficientSourceCodeCreator(
 
         foreach (PropDetails x in propsAndTheirTypes)
         {
+            if (x.ExcludeFromBoolNamingConvention)
+            {
+                code.AppendLine("    [ExcludeFromBoolNamingConvention]");
+            }
+
             code.Append("    public required ").Append(x.PropType).Append(' ')
                 .Append(x.PropName.ToSafeIdentifier()).AppendLine(" { get; init; }");
         }
