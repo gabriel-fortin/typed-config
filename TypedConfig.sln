@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UsageExample", "UsageExample\UsageExample.csproj", "{6BA5C537-B56E-4D7B-8DF2-C607093E2F85}"
 EndProject
@@ -11,9 +11,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{36D28546-DD2E-4683-8D7F-ACA53CDA7115}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
+		NUGET_PUBLISHING.md = NUGET_PUBLISHING.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypedConfig", "TypedConfig\TypedConfig.csproj", "{017D6C2E-27C1-4810-8203-9C4013FE9873}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypedConfig.Analyzer.Tests", "TypedConfig.Analyzer.Tests\TypedConfig.Analyzer.Tests.csproj", "{0E18B0BB-696A-4E9B-8E7B-EE1203837AE4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,5 +44,9 @@ Global
 		{017D6C2E-27C1-4810-8203-9C4013FE9873}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{017D6C2E-27C1-4810-8203-9C4013FE9873}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{017D6C2E-27C1-4810-8203-9C4013FE9873}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E18B0BB-696A-4E9B-8E7B-EE1203837AE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E18B0BB-696A-4E9B-8E7B-EE1203837AE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E18B0BB-696A-4E9B-8E7B-EE1203837AE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E18B0BB-696A-4E9B-8E7B-EE1203837AE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

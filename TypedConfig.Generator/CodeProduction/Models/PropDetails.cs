@@ -3,13 +3,15 @@
 public record struct PropDetails(
     string PropType,
     string? RequiredNamespace,
-    string PropName)
+    string PropName,
+    bool ExcludeFromBoolNamingConvention = false)
 {
-    public static PropDetails From(PartialPropDetails partial, string propName)
+    public static PropDetails From(PartialPropDetails partial, string propName, bool excludeFromBoolNamingConvention)
     {
         return new PropDetails(
             partial.PropType,
             partial.RequiredNamespace,
-            propName);
+            propName,
+            excludeFromBoolNamingConvention);
     }
 }

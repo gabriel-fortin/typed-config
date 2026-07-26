@@ -1,7 +1,8 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using NUnit.Framework;
 
@@ -21,7 +22,9 @@ public class TypedConfigTypesGeneratorTests
     private static string GeneratedCode(GeneratorDriverRunResult result) =>
         string.Join("\n", result.GeneratedTrees.Select(t => t.GetText().ToString()));
 
-    private static GeneratorDriverRunResult RunGenerator(string? appsettingsContent = null)
+    private static GeneratorDriverRunResult RunGenerator(
+        string? appsettingsContent = null,
+        IReadOnlyDictionary<string, string>? editorConfig = null)
     {
         // Create a compilation
         CSharpCompilation compilation = CSharpCompilation.Create("TestAssembly",
@@ -39,6 +42,12 @@ public class TypedConfigTypesGeneratorTests
         // Create and run the driver
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generatorUnderTest)
             .AddAdditionalTexts(additionalTexts);
+
+        if (editorConfig != null)
+        {
+            driver = driver.WithUpdatedAnalyzerConfigOptions(
+                new TestConfigOptionsProvider(new TestConfigOptions(editorConfig)));
+        }
 
         return driver.RunGenerators(compilation).GetRunResult();
     }
@@ -59,6 +68,40 @@ public class TypedConfigTypesGeneratorTests
         {
             return _text;
         }
+    }
+
+    /// <summary>
+    /// Test double that surfaces a dictionary of .editorconfig key/values, using the same
+    /// case-insensitive key comparison the real editorconfig options use.
+    /// </summary>
+    private sealed class TestConfigOptions : AnalyzerConfigOptions
+    {
+        private readonly Dictionary<string, string> _values;
+
+        public TestConfigOptions(IReadOnlyDictionary<string, string> values)
+        {
+            _values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, string> pair in values)
+            {
+                _values[pair.Key] = pair.Value;
+            }
+        }
+
+        public override bool TryGetValue(string key, out string value)
+        {
+            return _values.TryGetValue(key, out value!);
+        }
+
+        public override IEnumerable<string> Keys => _values.Keys;
+    }
+
+    private sealed class TestConfigOptionsProvider(AnalyzerConfigOptions options) : AnalyzerConfigOptionsProvider
+    {
+        public override AnalyzerConfigOptions GlobalOptions => options;
+
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => options;
+
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => options;
     }
 
     #endregion
@@ -92,6 +135,24 @@ public class TypedConfigTypesGeneratorTests
         Assert.That(result.GeneratedTrees.Length, Is.GreaterThan(0));
         string generatedCode = GeneratedCode(result);
         Assert.That(generatedCode, Does.Contain("class TypedConfig"));
+    }
+
+    [Test]
+    public void Generator_WithEmptyAppsettings_GeneratesExcludeFromBoolNamingConventionAttribute()
+    {
+        // Arrange
+        var jsonContent = """
+        {
+        }
+        """;
+
+        // Act
+        GeneratorDriverRunResult result = RunGenerator(jsonContent);
+
+        // Assert
+        Assert.That(result.Diagnostics.Where(IsErrorSeverity), Is.Empty);
+        string generatedCode = GeneratedCode(result);
+        Assert.That(generatedCode, Does.Contain("class ExcludeFromBoolNamingConventionAttribute"));
     }
 
     [Test]
@@ -170,6 +231,87 @@ public class TypedConfigTypesGeneratorTests
         Assert.That(generatedCode, Does.Contain("class DatabaseType"));
         Assert.That(generatedCode, Does.Contain("public required int ConnectionTimeout"));
         Assert.That(generatedCode, Does.Contain("public required bool EnableRetry"));
+    }
+
+    [Test]
+    public void Generator_WithExcludedTopLevelSection_MarksBoolPropertyButNotSibling()
+    {
+        // Arrange
+        var jsonContent = """
+        {
+            "Logging": {
+                "BadlyNamedBool": true
+            },
+            "OtherBadlyNamedBool": true
+        }
+        """;
+        var editorConfig = new Dictionary<string, string>
+        {
+            ["typed_config.excluded_sections"] = "Logging",
+        };
+
+        // Act
+        GeneratorDriverRunResult result = RunGenerator(jsonContent, editorConfig);
+
+        // Assert
+        Assert.That(result.Diagnostics.Where(IsErrorSeverity), Is.Empty);
+        string generatedCode = GeneratedCode(result);
+        Assert.That(generatedCode, Does.Contain(
+            "[ExcludeFromBoolNamingConvention]\n    public required bool BadlyNamedBool"));
+        Assert.That(generatedCode, Does.Not.Contain(
+            "[ExcludeFromBoolNamingConvention]\n    public required bool OtherBadlyNamedBool"));
+    }
+
+    [Test]
+    public void Generator_WithExcludedNestedSection_ExcludesOnlyThatSubtree()
+    {
+        // Arrange - "Database:Advanced" is excluded, but a bad boolean elsewhere is still unmarked
+        var jsonContent = """
+        {
+            "Database": {
+                "Retry": true,
+                "Advanced": {
+                    "DarkMode": true
+                }
+            }
+        }
+        """;
+        var editorConfig = new Dictionary<string, string>
+        {
+            ["typed_config.excluded_sections"] = "Database:Advanced",
+        };
+
+        // Act
+        GeneratorDriverRunResult result = RunGenerator(jsonContent, editorConfig);
+
+        // Assert
+        Assert.That(result.Diagnostics.Where(IsErrorSeverity), Is.Empty);
+        string generatedCode = GeneratedCode(result);
+        Assert.That(generatedCode, Does.Contain(
+            "[ExcludeFromBoolNamingConvention]\n    public required bool DarkMode"));
+        Assert.That(generatedCode, Does.Not.Contain(
+            "[ExcludeFromBoolNamingConvention]\n    public required bool Retry"));
+    }
+
+    [Test]
+    public void Generator_WithoutExclusionConfig_DoesNotMarkAnyProperty()
+    {
+        // Arrange - same JSON as the exclusion test, but no editorconfig option
+        var jsonContent = """
+        {
+            "Logging": {
+                "DarkMode": true
+            }
+        }
+        """;
+
+        // Act
+        GeneratorDriverRunResult result = RunGenerator(jsonContent);
+
+        // Assert
+        Assert.That(result.Diagnostics.Where(IsErrorSeverity), Is.Empty);
+        string generatedCode = GeneratedCode(result);
+        Assert.That(generatedCode, Does.Not.Contain("[ExcludeFromBoolNamingConvention]"));
     }
 
     [Test]

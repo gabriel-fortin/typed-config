@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.Contracts;
+using System.Diagnostics.Contracts;
 using org.g14.TypedConfig.Generator.CodeProduction.Models;
 
 namespace org.g14.TypedConfig.Generator.CodeProduction;
@@ -31,4 +31,11 @@ public interface ISourceCodeCreator
 
     [Pure]
     SourceCodeDetails GetServiceCollectionExtensionMethod(string className);
+
+    /// <summary>
+    /// Creates code for the attribute used to exclude a boolean property from the
+    /// bool naming convention analyzer.
+    /// </summary>
+    [Pure]
+    SourceCodeDetails GetExcludeFromBoolNamingConventionAttributeClass();
 }

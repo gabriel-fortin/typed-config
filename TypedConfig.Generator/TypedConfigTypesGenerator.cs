@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using Newtonsoft.Json.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -10,11 +10,11 @@ using org.g14.TypedConfig.Generator.JsonParsing.Models;
 
 namespace org.g14.TypedConfig.Generator;
 
-public class TypedConfigTypesGenerator(
+public partial class TypedConfigTypesGenerator(
     string baseNamespace,
+    ImmutableHashSet<string> excludedSections,
     SourceProductionContext ctx)
 {
-
     private const string ROOT_CLASS_NAME = "TypedConfig";
     private const string UNDEFINED_CLASS_NAME = "Undefined";
 
@@ -32,29 +32,35 @@ public class TypedConfigTypesGenerator(
 
         if (!IsFileCountValid(appsettingsFiles, out Diagnostic? diagnostic1))
         {
-            ctx.ReportDiagnostic(diagnostic1);
-            code.GetErrorIndicatingClass(diagnostic1.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
+            ctx.ReportDiagnostic(diagnostic1!);
+            code.GetErrorIndicatingClass(diagnostic1!.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
             return;
         }
 
         if (!TryReadAppsettingsFileStructure(appsettingsFiles,
                 out JsonType? parsedStructure, out Diagnostic? diagnostic2))
         {
-            ctx.ReportDiagnostic(diagnostic2);
-            code.GetErrorIndicatingClass(diagnostic2.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
+            ctx.ReportDiagnostic(diagnostic2!);
+            code.GetErrorIndicatingClass(diagnostic2!.GetMessage(), ROOT_CLASS_NAME).WriteTo(ctx);
             return;
         }
 
         if (parsedStructure is not JsonObjectType jsonObject) return;
 
-        // the actual generation of classes matching appsettings items
-        _ = GenerateAndGetTypeOfObjectJsonItem(jsonObject, baseNamespace, ROOT_CLASS_NAME);
+        // the actual generation of classes for representing appsettings items
+        var locationContext = LocationContext.Init(baseNamespace, excludedSections);
+        _ = GenerateAndGetTypeOfObjectJsonItem(jsonObject, ROOT_CLASS_NAME, locationContext);
     }
 
 
     public void GenerateServiceCollectionExtensionMethod()
     {
         code.GetServiceCollectionExtensionMethod(ROOT_CLASS_NAME).WriteTo(ctx);
+    }
+
+    public void GenerateExcludeFromBoolNamingConventionAttribute()
+    {
+        code.GetExcludeFromBoolNamingConventionAttributeClass().WriteTo(ctx);
     }
 
     private bool TryReadAppsettingsFileStructure(
@@ -98,8 +104,8 @@ public class TypedConfigTypesGenerator(
     /// Computes the type for an appsettings item of the object kind.
     /// Internally, causes code generation for that type.
     /// </summary>
-    private PartialPropDetails GenerateAndGetTypeOfObjectJsonItem(
-        JsonObjectType jsonStructure, string @namespace, string className)
+    private PartialPropDetails GenerateAndGetTypeOfObjectJsonItem(JsonObjectType jsonStructure, string className,
+        LocationContext loc)
     {
         ctx.CancellationToken.ThrowIfCancellationRequested();
 
@@ -109,29 +115,31 @@ public class TypedConfigTypesGenerator(
                 .Select(GetOrGenerateTypeOfObjectProperty)
                 .ToArray();
 
-        code.GetAppsettingsObjectClass(@namespace, propsAndTheirTypes, className).WriteTo(ctx);
+        code.GetAppsettingsObjectClass(loc.Namespace, propsAndTheirTypes, className).WriteTo(ctx);
 
         return new PartialPropDetails(
             PropType: className,
-            RequiredNamespace: @namespace);
+            RequiredNamespace: loc.Namespace);
 
         // local helper function
         PropDetails GetOrGenerateTypeOfObjectProperty(KeyValuePair<string, JsonType> kvp)
         {
             string propName = kvp.Key;
             JsonType propDetails = kvp.Value;
+            LocationContext propLoc = loc.Child(propName);
 
             PartialPropDetails partialResult = propDetails switch
             {
                 JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
-                JsonArrayType arr =>
-                    GetOrGenerateTypeOfArrayJsonItem(arr, $"{@namespace}.{propName}", $"{propName}ItemType"),
-                JsonObjectType obj =>
-                    GenerateAndGetTypeOfObjectJsonItem(obj, $"{@namespace}.{propName}", $"{propName}Type"),
+                JsonArrayType arr => GetOrGenerateTypeOfArrayJsonItem(arr, $"{propName}ItemType", propLoc),
+                JsonObjectType obj => GenerateAndGetTypeOfObjectJsonItem(obj, $"{propName}Type", propLoc),
                 _ => new(PropType: UNDEFINED_CLASS_NAME, RequiredNamespace: baseNamespace),
             };
 
-            return PropDetails.From(partialResult, propName);
+            bool excludePropFromNamingConventionCheck = propLoc.IsExcludedFromBoolConventionCheck &&
+                propDetails is JsonPrimitiveType { Kind: JTokenType.Boolean };
+
+            return PropDetails.From(partialResult, propName, excludePropFromNamingConventionCheck);
         }
     }
 
@@ -139,14 +147,14 @@ public class TypedConfigTypesGenerator(
     /// Computes the type for an appsettings item of the array kind.
     /// Possibly causes class code generation in downstream calls.
     /// </summary>
-    private PartialPropDetails GetOrGenerateTypeOfArrayJsonItem(
-        JsonArrayType jsonStructure, string @namespace, string className)
+    private PartialPropDetails GetOrGenerateTypeOfArrayJsonItem(JsonArrayType jsonStructure, string className,
+        LocationContext loc)
     {
         PartialPropDetails result = jsonStructure.ItemType switch
         {
             JsonPrimitiveType primitive => GetTypeOfPrimitiveJsonItem(primitive),
-            JsonArrayType array => GetOrGenerateTypeOfArrayJsonItem(array, @namespace, className),
-            JsonObjectType obj => GenerateAndGetTypeOfObjectJsonItem(obj, @namespace, className),
+            JsonArrayType array => GetOrGenerateTypeOfArrayJsonItem(array, className, loc),
+            JsonObjectType obj => GenerateAndGetTypeOfObjectJsonItem(obj, className, loc),
             _ => new(PropType: UNDEFINED_CLASS_NAME, RequiredNamespace: baseNamespace),
         };
 

@@ -1,4 +1,4 @@
-﻿# Typed Config
+# Typed Config
 
 A C# source generator and analyzer for class-based (and type-safe) access to appsettings.
 
@@ -15,7 +15,10 @@ A C# source generator and analyzer for class-based (and type-safe) access to app
 builder.Services.AddTypedConfig();
 ```
 
-3) Inject `TypedConfig` where needed.
+3) Inject `TypedConfig` where needed and access appsettings:
+```csharp
+string defaultLogLevel = typedConfig.Logging.LogLevel.Default;
+```
 
 ## Overview
 
@@ -27,7 +30,8 @@ This project adds a source generator that creates strongly-typed classes represe
 - **Type-Safe Configuration**: Allows accessing your configuration in a type-safe way
 - **Source Generator**: Automatically generates C# classes based on your `appsettings.json`
 - **Dependency Injection Support**: Has extension method for .NET's DI container
-- **Nested Configuration**: Supports hierarchical configuration structures
+- **Naming convention**: Boolean keys are expected to have an appropriate prefix
+    + Selected appsettings sections can be excluded from the convention check
 
 ## Getting Started
 
@@ -126,6 +130,14 @@ public class ExampleClass(
 }
 ```
 
+### 5. Add exceptions for the boolean naming convention check
+
+In `.editorconfig`, add a list of sections that the analyzer should ignore during the boolean naming convention check:
+```editorconfig
+[appsettings.json]                                                                                                                                                                                                                                                                                                                                           
+typed_config.excluded_sections = Logging,Foo:Bar
+```
+
 ## Conventions
 
 You do you babe but I recommend the following conventions.
@@ -182,6 +194,21 @@ boolean values within the `Flags` section follow naming conventions, starting wi
 - `Use...`
 
 This helps maintain consistency and readability across your configuration.
+
+#### Excluding sections from the analyzer
+
+You can tell the analyzer to skip specific sections of `appsettings.json` via `.editorconfig`.
+Set `typed_config.excluded_sections` to a comma-separated list of section paths, using a colon
+(`:`) to address nested sections (the same convention as .NET configuration keys):
+
+```editorconfig
+[appsettings.json]
+typed_config.excluded_sections = Logging, Database:Advanced
+```
+
+Excluding a section skips its **entire subtree**, so no boolean inside it is checked. Matching is
+case-insensitive. This is useful for framework-owned or third-party sections whose names you don't
+control.
 
 ## Limitations
 
