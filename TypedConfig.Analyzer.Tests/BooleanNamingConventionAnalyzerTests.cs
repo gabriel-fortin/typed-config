@@ -215,6 +215,43 @@ public class BooleanNamingConventionAnalyzerTests
     }
 
     [Test]
+    public async Task PropertyUsage_OnGeneratedModelWithExcludedAttribute_ReportsNoDiagnostic()
+    {
+        // Arrange
+        var source = """
+        namespace TestApp.Generated
+        {
+            public sealed class ExcludeFromBoolNamingConventionAttribute : System.Attribute
+            {
+            }
+
+            public class ConfigModel
+            {
+                [ExcludeFromBoolNamingConvention]
+                public bool DarkMode { get; set; }
+            }
+        }
+
+        namespace TestApp
+        {
+            public class Consumer
+            {
+                public void Use(Generated.ConfigModel config)
+                {
+                    var a = config.DarkMode;
+                }
+            }
+        }
+        """;
+
+        // Act
+        ImmutableArray<Diagnostic> diagnostics = await RunAnalyzerAsync(sourceCode: source);
+
+        // Assert
+        Assert.That(diagnostics, Is.Empty);
+    }
+
+    [Test]
     public async Task PropertyUsage_OnNonGeneratedModel_ReportsNoDiagnostic()
     {
         // Arrange

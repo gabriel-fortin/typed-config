@@ -13,7 +13,8 @@ public class ExampleClass(
 
         // entry not following naming convention
         bool b = config.TestBool;
-        bool configPropThatShouldBeIgnoredAndNotGetWarnings = config.Bamboozle.BadlyNamedBoolInLogging;
+        // entry excluded from naming convention check
+        bool configPropThatShouldNotProduceWarnings = config.Bamboozle.BadlyNamedBoolInLogging;
 
         if (config.IncomeSupport.IsEnabled)
         {

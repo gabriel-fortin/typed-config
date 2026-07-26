@@ -167,6 +167,8 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
 
         if (!IsGeneratedModel(containingType)) return;
 
+        if (IsExcludedFromBoolNamingConvention(propertySymbol)) return;
+
         string name = propertySymbol.Name;
         if (StartsWithValidBooleanPrefix(name)) return;
 
@@ -174,6 +176,14 @@ public class BooleanNamingConventionAnalyzer : DiagnosticAnalyzer
         Location location = context.Operation.Syntax.GetLocation();
         var diagnostic = Diagnostic.Create(DiagnosticDescriptors.BooleanNamingConvention, location, name);
         context.ReportDiagnostic(diagnostic);
+    }
+
+    private static bool IsExcludedFromBoolNamingConvention(IPropertySymbol propertySymbol)
+    {
+        // The attribute is generated into each consuming project's own namespace, so
+        // match on the simple name rather than a fully-qualified type.
+        return propertySymbol.GetAttributes()
+            .Any(attr => attr.AttributeClass?.Name == "ExcludeFromBoolNamingConventionAttribute");
     }
 
     private static bool IsGeneratedModel(INamedTypeSymbol type)
