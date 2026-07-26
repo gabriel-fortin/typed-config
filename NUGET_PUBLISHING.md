@@ -5,17 +5,18 @@ This file describes steps for creating a new version of the nuget package
 
 ## Update code and prepare package
 
-- Move entries from AnalyzerReleases.Unshipped to AnalyzerReleases.Shipped in:
+- Move entries from `AnalyzerReleases.Unshipped` to `AnalyzerReleases.Shipped` in:
   + the generator project
   + the analyzer project
-- Update the &lt;Version&gt; node in:
-  + TypedConfig.csproj – based on the extent of changes in Analyzer and Generator
-  + TypedConfig.Analyzer.csproj – match the version in TypedConfig.csproj
-  + TypedConfig.Generator.csproj – match the version in TypedConfig.csproj
-- Update version of the TypedConfig package reference in UsageExample.csproj
+- Update the `<Version>` node in:
+  + _TypedConfig.csproj_ – based on the extent of changes in Analyzer and Generator
+  + _TypedConfig.Analyzer.csproj_ – match the version in _TypedConfig.csproj_
+  + _TypedConfig.Generator.csproj_ – match the version in _TypedConfig.csproj_
+- Update the `<PackageReleaseNotes>` node in _TypedConfig.csproj_
+- Update version of the TypedConfig package reference in _UsageExample.csproj_
 - Commit the changes (so that the generated nuget package references the right git hash)
-- Make sure you're using the Release configuration
-- Build/Pack the TypedConfig project (creates .nupkg file in ./generated_nuget_packages)
+- Make sure you're using the **Release** configuration
+- Build/Pack the TypedConfig project (creates .nupkg file in `./generated_nuget_packages`)
 
 
 ## Verify the package
