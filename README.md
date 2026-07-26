@@ -15,7 +15,10 @@ A C# source generator and analyzer for class-based (and type-safe) access to app
 builder.Services.AddTypedConfig();
 ```
 
-3) Inject `TypedConfig` where needed.
+3) Inject `TypedConfig` where needed and access appsettings:
+```csharp
+string defaultLogLevel = typedConfig.Logging.LogLevel.Default;
+```
 
 ## Overview
 
@@ -27,7 +30,8 @@ This project adds a source generator that creates strongly-typed classes represe
 - **Type-Safe Configuration**: Allows accessing your configuration in a type-safe way
 - **Source Generator**: Automatically generates C# classes based on your `appsettings.json`
 - **Dependency Injection Support**: Has extension method for .NET's DI container
-- **Nested Configuration**: Supports hierarchical configuration structures
+- **Naming convention**: Boolean keys are expected to have an appropriate prefix
+    + Selected appsettings sections can be excluded from the convention check
 
 ## Getting Started
 
@@ -124,6 +128,14 @@ public class ExampleClass(
         }
     }
 }
+```
+
+### 5. Add exceptions for the boolean naming convention check
+
+In `.editorconfig`, add a list of sections that the analyzer should ignore during the boolean naming convention check:
+```editorconfig
+[appsettings.json]                                                                                                                                                                                                                                                                                                                                           
+typed_config.excluded_sections = Logging,Foo:Bar
 ```
 
 ## Conventions
