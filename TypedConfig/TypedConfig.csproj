@@ -2,7 +2,8 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <Version>1.0.0</Version>
+        <Version>1.1.0</Version>
+        <PackageReleaseNotes>.editorconfig can be used to suppress naming convention checks for selected appsetting sections</PackageReleaseNotes>
 
         <!-- bits for nuget -->
         <PackageId>org.g14.TypedConfig</PackageId>
